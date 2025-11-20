@@ -1,0 +1,19 @@
+import { env } from '$env/dynamic/public';
+
+export const API_BASE_URL = env.PUBLIC_API_URL || 'http://localhost:3000/api';
+
+export async function fetchGrants() {
+    const res = await fetch(`${API_BASE_URL}/grants`);
+    if (!res.ok) throw new Error('Failed to fetch grants');
+    return res.json();
+}
+
+export async function generateProposal(grantId: number, companyProfile: any, mode: 'fast' | 'research') {
+    const res = await fetch(`${API_BASE_URL}/proposal/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grantId, companyProfile, mode })
+    });
+    if (!res.ok) throw new Error('Failed to generate proposal');
+    return res.json();
+}
