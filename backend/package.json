@@ -1,0 +1,18 @@
+{
+  "name": "ai-grant-crawler-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "@supabase/supabase-js": "^2.39.0",
+    "@google/generative-ai": "^0.21.0",
+    "axios": "^1.6.5",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.3.1"
+  }
+}
