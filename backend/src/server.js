@@ -7,6 +7,7 @@ import matcherRouter from './routes/matcher.js';
 import thinktankRouter from './routes/thinktank.js';
 import proposalRouter from './routes/proposal.js';
 import researchRouter from './routes/research.js';
+import julesRouter from './routes/jules.js';
 import { startCronJobs } from './jobs/cronScraper.js';
 
 dotenv.config();
@@ -33,6 +34,7 @@ app.use('/api/matcher', matcherRouter);
 app.use('/api/thinktank', thinktankRouter);
 app.use('/api/proposal', proposalRouter);
 app.use('/api/research', researchRouter);
+app.use('/api/jules', julesRouter);
 
 // Start 24/7 scraping cron jobs
 startCronJobs();

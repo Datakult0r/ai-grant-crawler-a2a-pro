@@ -17,3 +17,19 @@ export async function generateProposal(grantId: number, companyProfile: any, mod
     if (!res.ok) throw new Error('Failed to generate proposal');
     return res.json();
 }
+
+export async function askJules(message: string, context: any = {}) {
+    const res = await fetch(`${API_BASE_URL}/jules/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, context })
+    });
+    if (!res.ok) throw new Error('Failed to chat with Jules');
+    return res.json();
+}
+
+export async function checkJulesHealth() {
+    const res = await fetch(`${API_BASE_URL}/jules/health`);
+    if (!res.ok) throw new Error('Failed to check Jules health');
+    return res.json();
+}
