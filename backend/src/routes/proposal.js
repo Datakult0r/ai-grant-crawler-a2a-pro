@@ -2,8 +2,28 @@ import express from 'express';
 import { supabase } from '../config/database.js';
 import { generateProposalFast } from '../services/geminiService.js';
 import { generateResearchProposal } from '../services/aiResearcher.js';
+import { addClient, sendEvent, sendLog } from '../utils/sse.js';
 
 const router = express.Router();
+
+/**
+ * GET /api/proposal/:id/stream
+ * Connect to SSE stream for a specific proposal
+ */
+router.get('/:id/stream', (req, res) => {
+    const { id } = req.params;
+
+    // SSE Headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    addClient(id, res);
+
+    // Send initial connection message
+    sendEvent(id, 'connected', { message: 'Connected to proposal stream' });
+});
 
 /**
  * POST /api/proposal/generate
@@ -55,14 +75,17 @@ router.post('/generate', async (req, res) => {
                 if (mode === 'fast') {
                     result = await generateProposalFast(grant, companyProfile);
                 } else if (mode === 'research') {
+                    // Pass proposal.id for SSE updates
                     result = await generateResearchProposal(grant, companyProfile, proposal.id);
                 } else {
                     throw new Error("Invalid mode");
                 }
 
                 // Update proposal with result (if not already updated by service)
-                if (mode === 'fast') {
-                    await supabase
+                // Note: generateResearchProposal might update it internally, but we ensure it here for fast mode
+                // or if research mode returns the result directly.
+                if (mode === 'fast' || result) {
+                     await supabase
                         .from('proposals')
                         .update({
                             full_proposal: result,
@@ -71,6 +94,10 @@ router.post('/generate', async (req, res) => {
                         })
                         .eq('id', proposal.id);
                 }
+                
+                if (mode === 'research') {
+                     sendEvent(proposal.id, 'complete', { result });
+                }
 
             } catch (err) {
                 console.error('Proposal generation failed:', err);
@@ -78,6 +105,9 @@ router.post('/generate', async (req, res) => {
                     .from('proposals')
                     .update({ status: 'failed', full_proposal: `Error: ${err.message}` })
                     .eq('id', proposal.id);
+                
+                sendLog(proposal.id, `Error: ${err.message}`, 'System', 'Failed');
+                sendEvent(proposal.id, 'error', { error: err.message });
             }
         })();
 

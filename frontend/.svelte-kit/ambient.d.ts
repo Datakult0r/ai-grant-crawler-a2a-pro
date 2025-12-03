@@ -31,11 +31,12 @@ declare module '$env/static/private' {
 	export const ADSK_3DSMAX_x64_2026: string;
 	export const ALLUSERSPROFILE: string;
 	export const Anthropic: string;
-	export const ANTIGRAVITY_AGENT: string;
 	export const ANTIGRAVITY_CLI_ALIAS: string;
 	export const APPDATA: string;
 	export const ChocolateyInstall: string;
 	export const ChocolateyLastPathUpdate: string;
+	export const CHROME_CRASHPAD_PIPE_NAME: string;
+	export const CLAUDE_CODE_SSE_PORT: string;
 	export const COLOR: string;
 	export const COLORTERM: string;
 	export const CommonProgramFiles: string;
@@ -46,8 +47,13 @@ declare module '$env/static/private' {
 	export const CUDA_PATH_V11_8: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_12728_814456460: string;
+	export const EFC_20436_1262719628: string;
+	export const EFC_20436_1592913036: string;
+	export const EFC_20436_2283032206: string;
+	export const EFC_20436_3789132940: string;
+	export const ENABLE_IDE_INTEGRATION: string;
 	export const FIGMA_API_KEY: string;
+	export const FORCE_COLOR: string;
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GameFirstUserPath: string;
@@ -65,6 +71,8 @@ declare module '$env/static/private' {
 	export const LOGONSERVER: string;
 	export const NODE: string;
 	export const NODE_ENV: string;
+	export const NODE_EXE: string;
+	export const NPM_CLI_JS: string;
 	export const npm_command: string;
 	export const npm_config_cache: string;
 	export const npm_config_globalconfig: string;
@@ -84,6 +92,8 @@ declare module '$env/static/private' {
 	export const npm_package_json: string;
 	export const npm_package_name: string;
 	export const npm_package_version: string;
+	export const NPM_PREFIX_JS: string;
+	export const NPM_PREFIX_NPM_CLI_JS: string;
 	export const NUMBER_OF_PROCESSORS: string;
 	export const NVTOOLSEXT_PATH: string;
 	export const OMP_NUM_THREADS: string;
@@ -91,7 +101,6 @@ declare module '$env/static/private' {
 	export const OneDriveConsumer: string;
 	export const ORIGINAL_XDG_CURRENT_DESKTOP: string;
 	export const OS: string;
-	export const PAGER: string;
 	export const Path: string;
 	export const PATHEXT: string;
 	export const POSH_INSTALLER: string;
@@ -109,6 +118,7 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const RlsSvcPort: string;
+	export const SESSIONNAME: string;
 	export const SystemDrive: string;
 	export const SystemRoot: string;
 	export const TEMP: string;
@@ -125,11 +135,8 @@ declare module '$env/static/private' {
 	export const VSCODE_GIT_IPC_HANDLE: string;
 	export const VSCODE_INJECTION: string;
 	export const VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
-	export const WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: string;
-	export const WEBVIEW2_DEFAULT_BACKGROUND_COLOR: string;
 	export const windir: string;
 	export const ZES_ENABLE_SYSMAN: string;
-	export const __COMPAT_LAYER: string;
 }
 
 /**
@@ -164,11 +171,12 @@ declare module '$env/dynamic/private' {
 		ADSK_3DSMAX_x64_2026: string;
 		ALLUSERSPROFILE: string;
 		Anthropic: string;
-		ANTIGRAVITY_AGENT: string;
 		ANTIGRAVITY_CLI_ALIAS: string;
 		APPDATA: string;
 		ChocolateyInstall: string;
 		ChocolateyLastPathUpdate: string;
+		CHROME_CRASHPAD_PIPE_NAME: string;
+		CLAUDE_CODE_SSE_PORT: string;
 		COLOR: string;
 		COLORTERM: string;
 		CommonProgramFiles: string;
@@ -179,8 +187,13 @@ declare module '$env/dynamic/private' {
 		CUDA_PATH_V11_8: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_12728_814456460: string;
+		EFC_20436_1262719628: string;
+		EFC_20436_1592913036: string;
+		EFC_20436_2283032206: string;
+		EFC_20436_3789132940: string;
+		ENABLE_IDE_INTEGRATION: string;
 		FIGMA_API_KEY: string;
+		FORCE_COLOR: string;
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GameFirstUserPath: string;
@@ -198,6 +211,8 @@ declare module '$env/dynamic/private' {
 		LOGONSERVER: string;
 		NODE: string;
 		NODE_ENV: string;
+		NODE_EXE: string;
+		NPM_CLI_JS: string;
 		npm_command: string;
 		npm_config_cache: string;
 		npm_config_globalconfig: string;
@@ -217,6 +232,8 @@ declare module '$env/dynamic/private' {
 		npm_package_json: string;
 		npm_package_name: string;
 		npm_package_version: string;
+		NPM_PREFIX_JS: string;
+		NPM_PREFIX_NPM_CLI_JS: string;
 		NUMBER_OF_PROCESSORS: string;
 		NVTOOLSEXT_PATH: string;
 		OMP_NUM_THREADS: string;
@@ -224,7 +241,6 @@ declare module '$env/dynamic/private' {
 		OneDriveConsumer: string;
 		ORIGINAL_XDG_CURRENT_DESKTOP: string;
 		OS: string;
-		PAGER: string;
 		Path: string;
 		PATHEXT: string;
 		POSH_INSTALLER: string;
@@ -242,6 +258,7 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		RlsSvcPort: string;
+		SESSIONNAME: string;
 		SystemDrive: string;
 		SystemRoot: string;
 		TEMP: string;
@@ -258,11 +275,8 @@ declare module '$env/dynamic/private' {
 		VSCODE_GIT_IPC_HANDLE: string;
 		VSCODE_INJECTION: string;
 		VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
-		WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: string;
-		WEBVIEW2_DEFAULT_BACKGROUND_COLOR: string;
 		windir: string;
 		ZES_ENABLE_SYSMAN: string;
-		__COMPAT_LAYER: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

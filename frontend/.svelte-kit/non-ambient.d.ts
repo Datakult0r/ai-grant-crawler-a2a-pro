@@ -27,22 +27,26 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/" | "/alerts" | "/documents" | "/matcher" | "/predictor" | "/team" | "/thinktank" | "/tracker" | "/writer";
+		RouteId(): "/" | "/alerts" | "/documents" | "/jules" | "/matcher" | "/predictor" | "/team" | "/thinktank" | "/thinktank/[grantId]" | "/tracker" | "/writer" | "/writer/[grantId]";
 		RouteParams(): {
-			
+			"/thinktank/[grantId]": { grantId: string };
+			"/writer/[grantId]": { grantId: string }
 		};
 		LayoutParams(): {
-			"/": Record<string, never>;
+			"/": { grantId?: string };
 			"/alerts": Record<string, never>;
 			"/documents": Record<string, never>;
+			"/jules": Record<string, never>;
 			"/matcher": Record<string, never>;
 			"/predictor": Record<string, never>;
 			"/team": Record<string, never>;
-			"/thinktank": Record<string, never>;
+			"/thinktank": { grantId?: string };
+			"/thinktank/[grantId]": { grantId: string };
 			"/tracker": Record<string, never>;
-			"/writer": Record<string, never>
+			"/writer": { grantId?: string };
+			"/writer/[grantId]": { grantId: string }
 		};
-		Pathname(): "/" | "/alerts" | "/alerts/" | "/documents" | "/documents/" | "/matcher" | "/matcher/" | "/predictor" | "/predictor/" | "/team" | "/team/" | "/thinktank" | "/thinktank/" | "/tracker" | "/tracker/" | "/writer" | "/writer/";
+		Pathname(): "/" | "/alerts" | "/alerts/" | "/documents" | "/documents/" | "/jules" | "/jules/" | "/matcher" | "/matcher/" | "/predictor" | "/predictor/" | "/team" | "/team/" | "/thinktank" | "/thinktank/" | `/thinktank/${string}` & {} | `/thinktank/${string}/` & {} | "/tracker" | "/tracker/" | "/writer" | "/writer/" | `/writer/${string}` & {} | `/writer/${string}/` & {};
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): "/favicon.png" | "/manifest.json" | string & {};
 	}

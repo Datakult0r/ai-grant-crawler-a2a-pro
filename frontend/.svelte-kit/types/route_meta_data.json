@@ -2,10 +2,13 @@
 	"/": [],
 	"/alerts": [],
 	"/documents": [],
+	"/jules": [],
 	"/matcher": [],
 	"/predictor": [],
 	"/team": [],
 	"/thinktank": [],
+	"/thinktank/[grantId]": [],
 	"/tracker": [],
-	"/writer": []
+	"/writer": [],
+	"/writer/[grantId]": []
 }
