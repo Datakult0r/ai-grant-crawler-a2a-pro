@@ -28,6 +28,8 @@ Production-ready autonomous grant discovery system with MCP scrapers, A2A orches
    - Supabase credentials
    - Gemini API key
 
+   > **Note**: For production deployment, you must set `PUBLIC_API_URL` in your frontend environment (e.g., Vercel) to point to the live public URL of the deployed backend service (e.g., `https://your-backend.up.railway.app/api`).
+
 3. **Database Setup**
    Run `schema.sql` in your Supabase SQL editor.
 
