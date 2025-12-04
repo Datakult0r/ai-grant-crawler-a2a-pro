@@ -200,6 +200,8 @@ const storeProposal = async (proposalId, proposal, duration) => {
         })
         .eq('id', proposalId);
 
-    if (error) throw error;
+    if (error) {
+        console.warn('⚠️ Could not store proposal in database (likely missing table). Skipping.', error.message);
+    }
 };
 

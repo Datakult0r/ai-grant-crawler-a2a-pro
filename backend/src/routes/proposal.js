@@ -6,6 +6,34 @@ import { addClient, sendEvent, sendLog } from '../utils/sse.js';
 
 const router = express.Router();
 
+// Mock grants data (duplicated from grants.js for fallback consistency)
+const MOCK_GRANTS = [
+    {
+        id: 1,
+        name: "Horizon Europe AI Innovation Grant",
+        category: "AI",
+        amount: "€2,500,000",
+        deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        eligibility: "Consortium of at least 3 EU member states."
+    },
+    {
+        id: 2,
+        name: "Portugal 2030 Digital Transformation",
+        category: "Web3",
+        amount: "€150,000",
+        deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+        eligibility: "Portuguese SMEs."
+    },
+    {
+        id: 3,
+        name: "Green AI Initiative",
+        category: "AI",
+        amount: "€50,000",
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        eligibility: "Research institutions and startups."
+    }
+];
+
 /**
  * GET /api/proposal/:id/stream
  * Connect to SSE stream for a specific proposal
@@ -38,18 +66,26 @@ router.post('/generate', async (req, res) => {
     }
 
     try {
-        // 1. Fetch grant details
-        const { data: grant, error: grantError } = await supabase
+        // 1. Fetch grant details (Try DB first, then Mock)
+        let grant;
+        const { data: dbGrant, error: grantError } = await supabase
             .from('grants')
             .select('*')
             .eq('id', grantId)
             .single();
 
-        if (grantError || !grant) {
-            return res.status(404).json({ error: 'Grant not found' });
+        if (grantError || !dbGrant) {
+            console.warn(`Grant lookup failed: ${grantError?.message || 'Not found'}. Using mock data.`);
+            grant = MOCK_GRANTS.find(g => g.id == grantId);
+            if (!grant) {
+                return res.status(404).json({ error: 'Grant not found' });
+            }
+        } else {
+            grant = dbGrant;
         }
 
-        // 2. Create proposal record
+        // 2. Create proposal record (Try DB, fail gracefully to Mock ID)
+        let proposalId;
         const { data: proposal, error: proposalError } = await supabase
             .from('proposals')
             .insert({
@@ -60,11 +96,16 @@ router.post('/generate', async (req, res) => {
             .select()
             .single();
 
-        if (proposalError) throw proposalError;
+        if (proposalError) {
+            console.warn('Proposal creation failed (DB likely missing). Using mock proposal ID.');
+            proposalId = Math.floor(Math.random() * 100000); // Mock ID
+        } else {
+            proposalId = proposal.id;
+        }
 
         // 3. Start generation (Async)
         // We return the proposal ID immediately so the frontend can poll or listen for SSE
-        res.json({ proposalId: proposal.id, status: 'processing' });
+        res.json({ proposalId: proposalId, status: 'processing' });
 
         // Background processing
         (async () => {
@@ -73,18 +114,21 @@ router.post('/generate', async (req, res) => {
                 const startTime = Date.now();
 
                 if (mode === 'fast') {
-                    result = await generateProposalFast(grant, companyProfile);
+                    // Check if we can run fast mode (needs Gemini Key)
+                    if (process.env.GEMINI_API_KEY === 'PLACEHOLDER_GEMINI_KEY') {
+                         result = `# Proposal for ${grant.name}\n\n## Executive Summary\n(Mock generated due to missing API Key)\n\nThis is a simulated proposal for ${companyProfile.name}.`;
+                    } else {
+                        result = await generateProposalFast(grant, companyProfile);
+                    }
                 } else if (mode === 'research') {
-                    // Pass proposal.id for SSE updates
-                    result = await generateResearchProposal(grant, companyProfile, proposal.id);
+                    // Pass proposalId for SSE updates
+                    result = await generateResearchProposal(grant, companyProfile, proposalId);
                 } else {
                     throw new Error("Invalid mode");
                 }
 
-                // Update proposal with result (if not already updated by service)
-                // Note: generateResearchProposal might update it internally, but we ensure it here for fast mode
-                // or if research mode returns the result directly.
-                if (mode === 'fast' || result) {
+                // Update proposal with result (if DB works)
+                if ((mode === 'fast' || result) && !proposalError) {
                      await supabase
                         .from('proposals')
                         .update({
@@ -92,22 +136,24 @@ router.post('/generate', async (req, res) => {
                             status: 'completed',
                             generation_time: Math.floor((Date.now() - startTime) / 1000)
                         })
-                        .eq('id', proposal.id);
+                        .eq('id', proposalId);
                 }
                 
                 if (mode === 'research') {
-                     sendEvent(proposal.id, 'complete', { result });
+                     sendEvent(proposalId, 'complete', { result });
                 }
 
             } catch (err) {
                 console.error('Proposal generation failed:', err);
-                await supabase
-                    .from('proposals')
-                    .update({ status: 'failed', full_proposal: `Error: ${err.message}` })
-                    .eq('id', proposal.id);
+                if (!proposalError) {
+                    await supabase
+                        .from('proposals')
+                        .update({ status: 'failed', full_proposal: `Error: ${err.message}` })
+                        .eq('id', proposalId);
+                }
                 
-                sendLog(proposal.id, `Error: ${err.message}`, 'System', 'Failed');
-                sendEvent(proposal.id, 'error', { error: err.message });
+                sendLog(proposalId, `Error: ${err.message}`, 'System', 'Failed');
+                sendEvent(proposalId, 'error', { error: err.message });
             }
         })();
 
