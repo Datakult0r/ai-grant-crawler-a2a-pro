@@ -63,18 +63,18 @@ export class ResearchService {
       return; // Don't end res yet if we want to keep connection open for debug? No, fail hard.
     }
 
-    // 4. Spawn Python Process
-    // Assuming we are in backend/src/services, execute from backend root?
-    const pythonScriptPath = path.resolve("ai-researcher/main.py");
-    // Note: Agent Laboratory main.py might expect different args.
-    // We are passing a JSON string as a generic "context" or "grant-data" arg.
-    // The implementation plan specified: --grant-data JSON
+    // 4. Spawn Python Process - Using bridge script for Agent Laboratory
+    const pythonScriptPath = path.resolve("ai-researcher/grant_research_bridge.py");
 
     const pythonProcess = spawn(
       "python",
       [pythonScriptPath, "--grant-data", JSON.stringify(researchContext)],
       {
         cwd: path.resolve("ai-researcher"), // Run inside the dir to find its imports
+        env: {
+          ...process.env,
+          PYTHONUNBUFFERED: "1", // Ensure real-time output streaming
+        },
       }
     );
 
@@ -83,39 +83,38 @@ export class ResearchService {
     );
 
     // 5. Pipe output to SSE
+    let buffer = "";
+
     pythonProcess.stdout.on("data", (data) => {
-      const line = data.toString().trim();
-      if (!line) return;
+      buffer += data.toString();
+      const lines = buffer.split("\n");
 
-      // Try to parse if it's JSON from the agent, or wrap as log
-      // The prompt requested specific SSE schema: { type, stage, agent, message }
-      // If the python script doesn't output JSON, we might need to parse or wrap it.
-      // For this bridge, we wrap generic logs unless they look like JSON events.
+      // Process all complete lines (leave incomplete line in buffer)
+      buffer = lines.pop() || "";
 
-      try {
-        const parsed = JSON.parse(line);
-        if (parsed.type) {
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        try {
+          // The bridge script outputs structured JSON events
+          const parsed = JSON.parse(trimmed);
+
+          // Forward the event directly to SSE
           res.write(`data: ${JSON.stringify(parsed)}\n\n`);
-        } else {
-          // Pass through as generic log
-          res.write(
-            `data: ${JSON.stringify({ type: "log", message: line })}\n\n`
-          );
-        }
-      } catch (e) {
-        // Not JSON, wrap as text log or try to heuristically detect stage
-        res.write(
-          `data: ${JSON.stringify({ type: "log", message: line })}\n\n`
-        );
 
-        // Heuristic for stage detection if needed for demo compliance
-        if (line.includes("Stage:")) {
+          // Update database on stage changes
+          if (parsed.type === "stage_started") {
+            supabase
+              .from("grant_research")
+              .update({ current_stage: parsed.stage })
+              .eq("id", researchRecord.id)
+              .then(() => {});
+          }
+        } catch (e) {
+          // Not JSON, wrap as text log
           res.write(
-            `data: ${JSON.stringify({
-              type: "stage_started",
-              stage: line.split("Stage:")[1].trim(),
-              message: line,
-            })}\n\n`
+            `data: ${JSON.stringify({ type: "log", message: trimmed })}\n\n`
           );
         }
       }
