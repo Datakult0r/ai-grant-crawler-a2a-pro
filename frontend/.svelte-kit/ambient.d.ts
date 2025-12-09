@@ -31,8 +31,10 @@ declare module '$env/static/private' {
 	export const ADSK_3DSMAX_x64_2026: string;
 	export const ALLUSERSPROFILE: string;
 	export const Anthropic: string;
+	export const ANTIGRAVITY_AGENT: string;
 	export const ANTIGRAVITY_CLI_ALIAS: string;
 	export const APPDATA: string;
+	export const BUNDLED_DEBUGPY_PATH: string;
 	export const ChocolateyInstall: string;
 	export const ChocolateyLastPathUpdate: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
@@ -47,10 +49,10 @@ declare module '$env/static/private' {
 	export const CUDA_PATH_V11_8: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_14108_1262719628: string;
-	export const EFC_14108_1592913036: string;
-	export const EFC_14108_2283032206: string;
-	export const EFC_14108_3789132940: string;
+	export const EFC_8748_1262719628: string;
+	export const EFC_8748_1592913036: string;
+	export const EFC_8748_2283032206: string;
+	export const EFC_8748_3789132940: string;
 	export const ENABLE_IDE_INTEGRATION: string;
 	export const FIGMA_API_KEY: string;
 	export const FORCE_COLOR: string;
@@ -101,6 +103,7 @@ declare module '$env/static/private' {
 	export const OneDriveConsumer: string;
 	export const ORIGINAL_XDG_CURRENT_DESKTOP: string;
 	export const OS: string;
+	export const PAGER: string;
 	export const Path: string;
 	export const PATHEXT: string;
 	export const POSH_INSTALLER: string;
@@ -117,6 +120,9 @@ declare module '$env/static/private' {
 	export const PROMPT: string;
 	export const PSModulePath: string;
 	export const PUBLIC: string;
+	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
+	export const PYTHONSTARTUP: string;
+	export const PYTHON_BASIC_REPL: string;
 	export const RlsSvcPort: string;
 	export const SESSIONNAME: string;
 	export const SystemDrive: string;
@@ -129,6 +135,7 @@ declare module '$env/static/private' {
 	export const USERDOMAIN_ROAMINGPROFILE: string;
 	export const USERNAME: string;
 	export const USERPROFILE: string;
+	export const VSCODE_DEBUGPY_ADAPTER_ENDPOINTS: string;
 	export const VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
 	export const VSCODE_GIT_ASKPASS_MAIN: string;
 	export const VSCODE_GIT_ASKPASS_NODE: string;
@@ -171,8 +178,10 @@ declare module '$env/dynamic/private' {
 		ADSK_3DSMAX_x64_2026: string;
 		ALLUSERSPROFILE: string;
 		Anthropic: string;
+		ANTIGRAVITY_AGENT: string;
 		ANTIGRAVITY_CLI_ALIAS: string;
 		APPDATA: string;
+		BUNDLED_DEBUGPY_PATH: string;
 		ChocolateyInstall: string;
 		ChocolateyLastPathUpdate: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
@@ -187,10 +196,10 @@ declare module '$env/dynamic/private' {
 		CUDA_PATH_V11_8: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_14108_1262719628: string;
-		EFC_14108_1592913036: string;
-		EFC_14108_2283032206: string;
-		EFC_14108_3789132940: string;
+		EFC_8748_1262719628: string;
+		EFC_8748_1592913036: string;
+		EFC_8748_2283032206: string;
+		EFC_8748_3789132940: string;
 		ENABLE_IDE_INTEGRATION: string;
 		FIGMA_API_KEY: string;
 		FORCE_COLOR: string;
@@ -241,6 +250,7 @@ declare module '$env/dynamic/private' {
 		OneDriveConsumer: string;
 		ORIGINAL_XDG_CURRENT_DESKTOP: string;
 		OS: string;
+		PAGER: string;
 		Path: string;
 		PATHEXT: string;
 		POSH_INSTALLER: string;
@@ -257,6 +267,9 @@ declare module '$env/dynamic/private' {
 		PROMPT: string;
 		PSModulePath: string;
 		PUBLIC: string;
+		PYDEVD_DISABLE_FILE_VALIDATION: string;
+		PYTHONSTARTUP: string;
+		PYTHON_BASIC_REPL: string;
 		RlsSvcPort: string;
 		SESSIONNAME: string;
 		SystemDrive: string;
@@ -269,6 +282,7 @@ declare module '$env/dynamic/private' {
 		USERDOMAIN_ROAMINGPROFILE: string;
 		USERNAME: string;
 		USERPROFILE: string;
+		VSCODE_DEBUGPY_ADAPTER_ENDPOINTS: string;
 		VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
 		VSCODE_GIT_ASKPASS_MAIN: string;
 		VSCODE_GIT_ASKPASS_NODE: string;

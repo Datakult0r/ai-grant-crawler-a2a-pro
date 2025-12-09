@@ -27,13 +27,15 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/" | "/alerts" | "/documents" | "/jules" | "/matcher" | "/predictor" | "/team" | "/thinktank" | "/thinktank/[grantId]" | "/tracker" | "/writer" | "/writer/[grantId]";
+		RouteId(): "/" | "/admin" | "/admin/sources" | "/alerts" | "/documents" | "/jules" | "/matcher" | "/predictor" | "/team" | "/thinktank" | "/thinktank/[grantId]" | "/tracker" | "/writer" | "/writer/[grantId]";
 		RouteParams(): {
 			"/thinktank/[grantId]": { grantId: string };
 			"/writer/[grantId]": { grantId: string }
 		};
 		LayoutParams(): {
 			"/": { grantId?: string };
+			"/admin": Record<string, never>;
+			"/admin/sources": Record<string, never>;
 			"/alerts": Record<string, never>;
 			"/documents": Record<string, never>;
 			"/jules": Record<string, never>;
@@ -46,8 +48,8 @@ declare module "$app/types" {
 			"/writer": { grantId?: string };
 			"/writer/[grantId]": { grantId: string }
 		};
-		Pathname(): "/" | "/alerts" | "/alerts/" | "/documents" | "/documents/" | "/jules" | "/jules/" | "/matcher" | "/matcher/" | "/predictor" | "/predictor/" | "/team" | "/team/" | "/thinktank" | "/thinktank/" | `/thinktank/${string}` & {} | `/thinktank/${string}/` & {} | "/tracker" | "/tracker/" | "/writer" | "/writer/" | `/writer/${string}` & {} | `/writer/${string}/` & {};
+		Pathname(): "/" | "/admin" | "/admin/" | "/admin/sources" | "/admin/sources/" | "/alerts" | "/alerts/" | "/documents" | "/documents/" | "/jules" | "/jules/" | "/matcher" | "/matcher/" | "/predictor" | "/predictor/" | "/team" | "/team/" | "/thinktank" | "/thinktank/" | `/thinktank/${string}` & {} | `/thinktank/${string}/` & {} | "/tracker" | "/tracker/" | "/writer" | "/writer/" | `/writer/${string}` & {} | `/writer/${string}/` & {};
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
-		Asset(): "/favicon.png" | "/manifest.json" | string & {};
+		Asset(): "/assets/lab/breadcrumb.jpg" | "/assets/lab/LabNPCs.png" | "/assets/lab/tiles/spriteSheet_fireEffect03_42x52.png" | "/assets/lab/tiles/spriteSheet_lightBulbSmallAnimation_32x32.png" | "/assets/lab/tiles/spriteSheet_lightingBulb02_136x146.png" | "/assets/lab/tiles/spriteSheet_tiledLiquids_32x32.png" | "/assets/lab/tiles/tilesFloor32.png" | "/assets/lab/tiles/tilesStuff.png" | "/assets/lab/tiles/tilesWalls.png" | "/favicon.png" | "/manifest.json" | string & {};
 	}
 }

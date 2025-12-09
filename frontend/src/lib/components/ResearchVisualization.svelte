@@ -1,9 +1,16 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { LabRenderer, Sprite, BreadcrumbStage } from '$lib/litecanvasRenderer.js';
+  import { onMount, onDestroy } from "svelte";
+  import {
+    LabRenderer,
+    Sprite,
+    BreadcrumbStage,
+  } from "$lib/litecanvasRenderer.js";
 
   // Props - grantId is the primary prop for SSE streaming
-  let { grantId, proposalId = null }: { grantId: string; proposalId?: string | null } = $props();
+  let {
+    grantId,
+    proposalId = null,
+  }: { grantId: string; proposalId?: string | null } = $props();
 
   // Canvas refs
   let canvasElement: HTMLCanvasElement;
@@ -13,76 +20,88 @@
   let eventSource: EventSource | null = null;
 
   // Game state
-  let sprites: Sprite[] = [];
-  let breadcrumbs: BreadcrumbStage[] = [];
+  let sprites = $state<Sprite[]>([]);
+  let breadcrumbs = $state<BreadcrumbStage[]>([]);
   let currentStageIndex = $state(0);
-  let logs = $state<Array<{timestamp: string, message: string, agent: string, status: string}>>([]);
+  let logs = $state<
+    Array<{ timestamp: string; message: string; agent: string; status: string }>
+  >([]);
   let selectedStageIndex = $state<number | null>(null);
+  let stageLogs = $derived(
+    selectedStageIndex !== null ? getLogsForStage(selectedStageIndex) : []
+  );
 
   // 7 Research stages (matching aiResearcher.js phases)
   const STAGES = [
-    'Literature Review',
-    'Plan Formulation',
-    'Data Preparation',
-    'Running Experiments',
-    'Results Interpretation',
-    'Report Writing',
-    'Report Refinement'
+    "Literature Review",
+    "Plan Formulation",
+    "Data Preparation",
+    "Running Experiments",
+    "Results Interpretation",
+    "Report Writing",
+    "Report Refinement",
   ];
 
   // Researcher data (5 agents matching the pixel sprites)
   const RESEARCHERS = [
-    { id: 0, name: 'Lit Reviewer', color: '#8b5cf6', spriteRow: 0 },
-    { id: 1, name: 'Idea Generator', color: '#3b82f6', spriteRow: 1 },
-    { id: 2, name: 'Data Analyst', color: '#10b981', spriteRow: 2 },
-    { id: 3, name: 'Experimenter', color: '#f59e0b', spriteRow: 3 },
-    { id: 4, name: 'Paper Writer', color: '#ec4899', spriteRow: 4 }
+    { id: 0, name: "Lit Reviewer", color: "#8b5cf6", spriteRow: 0 },
+    { id: 1, name: "Idea Generator", color: "#3b82f6", spriteRow: 1 },
+    { id: 2, name: "Data Analyst", color: "#10b981", spriteRow: 2 },
+    { id: 3, name: "Experimenter", color: "#f59e0b", spriteRow: 3 },
+    { id: 4, name: "Paper Writer", color: "#ec4899", spriteRow: 4 },
   ];
 
   // Sprite positions for each stage
   const STAGE_POSITIONS = {
-    0: [ // Literature Review - researchers at desks
+    0: [
+      // Literature Review - researchers at desks
       { x: 100, y: 400 },
       { x: 250, y: 400 },
       { x: 400, y: 400 },
-      { x: 550, y: 400 }
+      { x: 550, y: 400 },
     ],
-    1: [ // Plan Formulation - gather at meeting table
+    1: [
+      // Plan Formulation - gather at meeting table
       { x: 300, y: 350 },
       { x: 400, y: 350 },
       { x: 500, y: 350 },
-      { x: 400, y: 450 }
+      { x: 400, y: 450 },
     ],
-    2: [ // Data Preparation - spread out
+    2: [
+      // Data Preparation - spread out
       { x: 100, y: 300 },
       { x: 650, y: 300 },
       { x: 100, y: 500 },
-      { x: 650, y: 500 }
+      { x: 650, y: 500 },
     ],
-    3: [ // Running Experiments - clustered around center
+    3: [
+      // Running Experiments - clustered around center
       { x: 350, y: 400 },
       { x: 450, y: 400 },
       { x: 400, y: 350 },
-      { x: 400, y: 450 }
+      { x: 400, y: 450 },
     ],
-    4: [ // Results Interpretation - around whiteboard
+    4: [
+      // Results Interpretation - around whiteboard
       { x: 150, y: 350 },
       { x: 250, y: 350 },
       { x: 150, y: 450 },
-      { x: 250, y: 450 }
+      { x: 250, y: 450 },
     ],
-    5: [ // Report Writing - writer focus
+    5: [
+      // Report Writing - writer focus
       { x: 400, y: 400 },
       { x: 300, y: 350 },
       { x: 500, y: 350 },
-      { x: 400, y: 500 }
+      { x: 400, y: 500 },
     ],
-    6: [ // Report Refinement - celebration circle
+    6: [
+      // Report Refinement - celebration circle
       { x: 350, y: 350 },
       { x: 450, y: 350 },
       { x: 350, y: 450 },
-      { x: 450, y: 450 }
-    ]
+      { x: 450, y: 450 },
+    ],
   };
 
   /**
@@ -95,18 +114,18 @@
     renderer = new LabRenderer(canvasElement, {
       width: 800,
       height: 600,
-      fps: 30
+      fps: 30,
     });
 
     // Load assets
     try {
       await renderer.loadAssets({
-        researchers: '/assets/lab/LabNPCs.png',
-        floor: '/assets/lab/tiles/tilesFloor32.png',
-        stuff: '/assets/lab/tiles/tilesStuff.png'
+        researchers: "/assets/lab/LabNPCs.png",
+        floor: "/assets/lab/tiles/tilesFloor32.png",
+        stuff: "/assets/lab/tiles/tilesStuff.png",
       });
     } catch (error) {
-      console.error('[ResearchViz] Failed to load assets:', error);
+      console.error("[ResearchViz] Failed to load assets:", error);
       return;
     }
 
@@ -119,7 +138,7 @@
 
     // Set first stage as in-progress
     if (breadcrumbs.length > 0) {
-      breadcrumbs[0].status = 'in-progress';
+      breadcrumbs[0].status = "in-progress";
     }
 
     // Initialize sprites (4 researchers)
@@ -128,9 +147,9 @@
       const sprite = new Sprite(
         pos.x,
         pos.y,
-        'researchers',
+        "researchers",
         16, // frame width (16px sprites)
-        16  // frame height
+        16 // frame height
       );
       // Store researcher metadata
       (sprite as any).researcherId = researcher.id;
@@ -153,7 +172,7 @@
    * Fallback: /api/proposal/{proposalId}/stream
    */
   function connectToSSE() {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
     // Use grantId-based endpoint as primary (per spec)
     let sseUrl: string;
@@ -162,21 +181,21 @@
     } else if (proposalId) {
       sseUrl = `${apiUrl}/api/proposal/${proposalId}/stream`;
     } else {
-      console.error('[ResearchViz] No grantId or proposalId provided');
+      console.error("[ResearchViz] No grantId or proposalId provided");
       return;
     }
 
-    console.log('[ResearchViz] Connecting to SSE:', sseUrl);
+    console.log("[ResearchViz] Connecting to SSE:", sseUrl);
     eventSource = new EventSource(sseUrl);
 
-    eventSource.addEventListener('connected', (e) => {
-      console.log('[ResearchViz] Connected to SSE stream');
-      addLog('System', 'Connected to research stream', 'Connected');
+    eventSource.addEventListener("connected", (e) => {
+      console.log("[ResearchViz] Connected to SSE stream");
+      addLog("System", "Connected to research stream", "Connected");
     });
 
     // Handle SSE events per schema:
     // { type: "stage_started" | "stage_completed" | "agent_active" | "agent_idle", stage, agent, message }
-    eventSource.addEventListener('message', (e) => {
+    eventSource.addEventListener("message", (e) => {
       try {
         const data = JSON.parse(e.data);
         handleSSEEvent(data);
@@ -185,13 +204,9 @@
       }
     });
 
-    eventSource.addEventListener('log', (e) => {
+    eventSource.addEventListener("log", (e) => {
       const data = JSON.parse(e.data);
-      addLog(
-        data.agent || 'System',
-        data.message,
-        data.status || 'Processing'
-      );
+      addLog(data.agent || "System", data.message, data.status || "Processing");
 
       // Activate corresponding agent sprite
       if (data.agent) {
@@ -199,29 +214,29 @@
       }
     });
 
-    eventSource.addEventListener('phase', (e) => {
+    eventSource.addEventListener("phase", (e) => {
       const data = JSON.parse(e.data);
       updateStage(data.phase);
     });
 
-    eventSource.addEventListener('progress', (e) => {
+    eventSource.addEventListener("progress", (e) => {
       const data = JSON.parse(e.data);
-      console.log('[ResearchViz] Progress:', data.percentage);
+      console.log("[ResearchViz] Progress:", data.percentage);
     });
 
-    eventSource.addEventListener('complete', (e) => {
-      console.log('[ResearchViz] Research complete');
+    eventSource.addEventListener("complete", (e) => {
+      console.log("[ResearchViz] Research complete");
       // Mark all stages as completed
-      breadcrumbs.forEach(b => b.status = 'completed');
-      addLog('System', 'Research completed successfully!', 'Complete');
+      breadcrumbs.forEach((b) => (b.status = "completed"));
+      addLog("System", "Research completed successfully!", "Complete");
     });
 
-    eventSource.addEventListener('error', (e) => {
-      console.error('[ResearchViz] SSE error:', e);
+    eventSource.addEventListener("error", (e) => {
+      console.error("[ResearchViz] SSE error:", e);
     });
 
     eventSource.onerror = () => {
-      console.error('[ResearchViz] SSE connection error');
+      console.error("[ResearchViz] SSE connection error");
       // Attempt reconnection after delay
       setTimeout(() => {
         if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
@@ -234,48 +249,55 @@
   /**
    * Handle SSE events per the defined schema
    */
-  function handleSSEEvent(data: { type: string; stage?: string; agent?: string; message?: string }) {
+  function handleSSEEvent(data: {
+    type: string;
+    stage?: string;
+    agent?: string;
+    message?: string;
+  }) {
     const { type, stage, agent, message } = data;
 
     switch (type) {
-      case 'stage_started':
-        const startIndex = STAGES.findIndex(s =>
-          s.toLowerCase() === stage?.toLowerCase() ||
-          s.toLowerCase().includes(stage?.toLowerCase() || '')
+      case "stage_started":
+        const startIndex = STAGES.findIndex(
+          (s) =>
+            s.toLowerCase() === stage?.toLowerCase() ||
+            s.toLowerCase().includes(stage?.toLowerCase() || "")
         );
         if (startIndex >= 0) {
           updateStage(startIndex);
         }
-        if (message) addLog(agent || 'System', message, 'In Progress');
+        if (message) addLog(agent || "System", message, "In Progress");
         break;
 
-      case 'stage_completed':
-        const completeIndex = STAGES.findIndex(s =>
-          s.toLowerCase() === stage?.toLowerCase() ||
-          s.toLowerCase().includes(stage?.toLowerCase() || '')
+      case "stage_completed":
+        const completeIndex = STAGES.findIndex(
+          (s) =>
+            s.toLowerCase() === stage?.toLowerCase() ||
+            s.toLowerCase().includes(stage?.toLowerCase() || "")
         );
         if (completeIndex >= 0 && breadcrumbs[completeIndex]) {
-          breadcrumbs[completeIndex].status = 'completed';
+          breadcrumbs[completeIndex].status = "completed";
           // Move to next stage if available
           if (completeIndex + 1 < breadcrumbs.length) {
             updateStage(completeIndex + 1);
           }
         }
-        if (message) addLog(agent || 'System', message, 'Completed');
+        if (message) addLog(agent || "System", message, "Completed");
         break;
 
-      case 'agent_active':
-        activateAgentByName(agent || '');
-        if (message) addLog(agent || 'Agent', message, 'Active');
+      case "agent_active":
+        activateAgentByName(agent || "");
+        if (message) addLog(agent || "Agent", message, "Active");
         break;
 
-      case 'agent_idle':
+      case "agent_idle":
         // Reset agent animation
-        if (message) addLog(agent || 'Agent', message, 'Idle');
+        if (message) addLog(agent || "Agent", message, "Idle");
         break;
 
       default:
-        if (message) addLog(agent || 'System', message, 'Info');
+        if (message) addLog(agent || "System", message, "Info");
     }
   }
 
@@ -283,12 +305,15 @@
    * Add a log entry
    */
   function addLog(agent: string, message: string, status: string) {
-    logs = [...logs, {
-      timestamp: new Date().toLocaleTimeString(),
-      message,
-      agent,
-      status
-    }];
+    logs = [
+      ...logs,
+      {
+        timestamp: new Date().toLocaleTimeString(),
+        message,
+        agent,
+        status,
+      },
+    ];
 
     // Keep only last 200 logs
     if (logs.length > 200) {
@@ -300,9 +325,10 @@
    * Activate agent sprite animation by name
    */
   function activateAgentByName(agentName: string) {
-    const agentIndex = RESEARCHERS.findIndex(r =>
-      r.name.toLowerCase().includes(agentName.toLowerCase()) ||
-      agentName.toLowerCase().includes(r.name.toLowerCase().split(' ')[0])
+    const agentIndex = RESEARCHERS.findIndex(
+      (r) =>
+        r.name.toLowerCase().includes(agentName.toLowerCase()) ||
+        agentName.toLowerCase().includes(r.name.toLowerCase().split(" ")[0])
     );
 
     if (agentIndex >= 0 && sprites[agentIndex]) {
@@ -322,15 +348,15 @@
 
     // Mark previous stages as completed
     for (let i = 0; i < stageIndex; i++) {
-      breadcrumbs[i].status = 'completed';
+      breadcrumbs[i].status = "completed";
     }
 
     // Mark current stage as in-progress
-    breadcrumbs[stageIndex].status = 'in-progress';
+    breadcrumbs[stageIndex].status = "in-progress";
 
     // Mark future stages as pending
     for (let i = stageIndex + 1; i < breadcrumbs.length; i++) {
-      breadcrumbs[i].status = 'pending';
+      breadcrumbs[i].status = "pending";
     }
 
     currentStageIndex = stageIndex;
@@ -351,7 +377,7 @@
     if (!renderer) return;
 
     // Update all sprites
-    sprites.forEach(sprite => sprite.update(deltaTime));
+    sprites.forEach((sprite) => sprite.update(deltaTime));
   }
 
   /**
@@ -361,32 +387,32 @@
     if (!renderer) return;
 
     // Draw background floor
-    renderer.rect(0, 0, 800, 600, '#1a1a2e');
+    renderer.rect(0, 0, 800, 600, "#1a1a2e");
 
     // Draw lab floor tiles (simple pattern)
     for (let y = 120; y < 600; y += 32) {
       for (let x = 0; x < 800; x += 32) {
-        renderer.rect(x, y, 30, 30, '#252842');
-        renderer.rect(x, y, 30, 30, '#1f1f38');
+        renderer.rect(x, y, 30, 30, "#252842");
+        renderer.rect(x, y, 30, 30, "#1f1f38");
       }
     }
 
     // Draw breadcrumb timeline
-    breadcrumbs.forEach(breadcrumb => breadcrumb.draw(renderer!));
+    breadcrumbs.forEach((breadcrumb) => breadcrumb.draw(renderer!));
 
     // Draw meeting table (center area)
     if (currentStageIndex === 1 || currentStageIndex === 3) {
-      renderer.rect(320, 360, 160, 80, '#4a4a6a');
-      renderer.rectOutline(320, 360, 160, 80, '#6b6b8a', 2);
+      renderer.rect(320, 360, 160, 80, "#4a4a6a");
+      renderer.rectOutline(320, 360, 160, 80, "#6b6b8a", 2);
     }
 
     // Draw whiteboard (left area during Results Interpretation)
     if (currentStageIndex === 4) {
-      renderer.rect(80, 300, 120, 180, '#f5f5f5');
-      renderer.rectOutline(80, 300, 120, 180, '#333', 3);
-      renderer.text('RESULTS', 90, 320, '#333', 'bold 14px monospace');
-      renderer.text('• Accuracy: 94%', 90, 350, '#10b981', '10px monospace');
-      renderer.text('• Speed: +40%', 90, 370, '#10b981', '10px monospace');
+      renderer.rect(80, 300, 120, 180, "#f5f5f5");
+      renderer.rectOutline(80, 300, 120, 180, "#333", 3);
+      renderer.text("RESULTS", 90, 320, "#333", "bold 14px monospace");
+      renderer.text("• Accuracy: 94%", 90, 350, "#10b981", "10px monospace");
+      renderer.text("• Speed: +40%", 90, 370, "#10b981", "10px monospace");
     }
 
     // Draw sprites
@@ -397,11 +423,15 @@
       const sy = researcher.spriteRow * 16; // 16px sprite height
 
       renderer!.drawSprite(
-        'researchers',
-        sx, sy,
-        16, 16,
-        sprite.x - 16, sprite.y - 16, // Center sprite
-        32, 32 // 2x scale
+        "researchers",
+        sx,
+        sy,
+        16,
+        16,
+        sprite.x - 16,
+        sprite.y - 16, // Center sprite
+        32,
+        32 // 2x scale
       );
 
       // Draw researcher name tag
@@ -410,19 +440,19 @@
         sprite.x,
         sprite.y + 25,
         researcher.color,
-        'bold 9px monospace'
+        "bold 9px monospace"
       );
     });
 
     // Draw stage title
     if (currentStageIndex < STAGES.length) {
-      renderer.rect(200, 570, 400, 25, 'rgba(0, 0, 0, 0.7)');
+      renderer.rect(200, 570, 400, 25, "rgba(0, 0, 0, 0.7)");
       renderer.textCentered(
         `Stage ${currentStageIndex + 1}/7: ${STAGES[currentStageIndex]}`,
         400,
         587,
-        '#f59e0b',
-        'bold 14px monospace'
+        "#f59e0b",
+        "bold 14px monospace"
       );
     }
   }
@@ -439,9 +469,10 @@
    */
   function getLogsForStage(stageIndex: number): typeof logs {
     const stageName = STAGES[stageIndex];
-    return logs.filter(log =>
-      log.message.toLowerCase().includes(stageName.toLowerCase()) ||
-      log.agent.toLowerCase().includes(stageName.toLowerCase())
+    return logs.filter(
+      (log) =>
+        log.message.toLowerCase().includes(stageName.toLowerCase()) ||
+        log.agent.toLowerCase().includes(stageName.toLowerCase())
     );
   }
 
@@ -489,11 +520,12 @@
     <div class="logs-panel">
       <div class="logs-header">
         <h3 class="logs-title">{STAGES[selectedStageIndex]} - Activity Log</h3>
-        <button onclick={() => selectedStageIndex = null} class="close-btn">×</button>
+        <button onclick={() => (selectedStageIndex = null)} class="close-btn"
+          >×</button
+        >
       </div>
 
       <div class="logs-content">
-        {@const stageLogs = getLogsForStage(selectedStageIndex)}
         {#if stageLogs.length === 0}
           <p class="no-logs">No activity logs for this stage yet.</p>
         {:else}
@@ -504,7 +536,9 @@
                 <span class="log-timestamp">{log.timestamp}</span>
               </div>
               <p class="log-message">{log.message}</p>
-              <span class="log-status status-{log.status.toLowerCase()}">{log.status}</span>
+              <span class="log-status status-{log.status.toLowerCase()}"
+                >{log.status}</span
+              >
             </div>
           {/each}
         {/if}
@@ -614,7 +648,9 @@
   }
 
   @keyframes slide-in {
-    to { right: 20px; }
+    to {
+      right: 20px;
+    }
   }
 
   .logs-header {
@@ -704,11 +740,26 @@
     text-transform: uppercase;
   }
 
-  .status-processing { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-  .status-researching { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-  .status-thinking { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
-  .status-writing { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-  .status-complete { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+  .status-processing {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+  }
+  .status-researching {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+  }
+  .status-thinking {
+    background: rgba(139, 92, 246, 0.2);
+    color: #8b5cf6;
+  }
+  .status-writing {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+  }
+  .status-complete {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+  }
 
   /* All Logs Section */
   .all-logs-section {
