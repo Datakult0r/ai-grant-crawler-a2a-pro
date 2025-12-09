@@ -69,21 +69,6 @@ jobs:
   ai-researcher-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip" # Caches pip dependencies automatically
-
-      - name: Install Python Dependencies
-        working-directory: ./backend/ai-researcher
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Verify Python Syntax
         working-directory: ./backend/ai-researcher
         # Compiles all python files to check for syntax errors
