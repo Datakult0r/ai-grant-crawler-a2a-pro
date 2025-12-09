@@ -54,7 +54,11 @@
 
   function startThinktank() {
     if (!selectedGrant) return;
-    
+
+    // Redirect to grant-specific page with pixel-art visualization
+    window.location.href = `/thinktank/${selectedGrant}`;
+    return;
+
     isRunning = true;
     progress = 0;
     currentPhase = 0;

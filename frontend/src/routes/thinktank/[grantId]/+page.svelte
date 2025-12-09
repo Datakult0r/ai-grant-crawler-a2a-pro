@@ -14,12 +14,16 @@
     ArrowLeft,
   } from "lucide-svelte";
   import { Button } from "$lib/components/ui/button";
+  import { Badge } from "$lib/components/ui/badge";
   import { fetchGrants, generateProposal } from "$lib/api";
   import { goto } from "$app/navigation";
+  import ResearchVisualization from "$lib/components/ResearchVisualization.svelte";
+  import ResearchProgress from "$lib/components/ResearchProgress.svelte";
 
   let grantId = $page.params.grantId;
   let grant = $state(null);
   let isRunning = $state(false);
+  let showAgentLab = $state(false);
   let progress = $state(0);
   let currentPhase = $state(0);
   let activities = $state<
@@ -27,6 +31,7 @@
   >([]);
   let showOutput = $state(false);
   let proposalResult = $state(null);
+  let proposalIdState = $state(null);
   let error = $state(null);
   let eventSource: EventSource | null = null;
 
@@ -117,6 +122,7 @@
     try {
       // 1. Trigger generation
       const res = await generateProposal(grant.id, companyProfile, "research");
+      proposalIdState = res.proposalId;
 
       // 2. Connect to SSE
       eventSource = new EventSource(`/api/proposal/${res.proposalId}/stream`);
@@ -295,10 +301,20 @@
                 on:click={startThinktank}
                 class="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold
                                 neon-glow-purple hover:scale-105 transition-all duration-200
-                                flex items-center justify-center gap-2"
+                                flex items-center justify-center gap-2 mb-4"
               >
                 <Play class="w-5 h-5" />
                 Start AI Thinktank
+              </button>
+
+              <button
+                on:click={() => (showAgentLab = true)}
+                class="w-full py-4 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold
+                                hover:scale-105 transition-all duration-200
+                                flex items-center justify-center gap-2"
+              >
+                <Brain class="w-5 h-5" />
+                Deep Research (Agent Lab)
               </button>
             </div>
           {:else}
@@ -338,112 +354,26 @@
         </div>
       </div>
 
-      <!-- Center - Visualization Canvas -->
+      <!-- Center - Pixel Art Research Visualization -->
       <div class="lg:col-span-6">
-        <div class="glass-card p-8 min-h-[600px]">
-          <div
-            class="relative w-full h-[600px] bg-gradient-to-br from-background/50 to-muted/30 rounded-2xl overflow-hidden"
-          >
-            {#if !isRunning && !showOutput}
+        {#if showAgentLab}
+          <ResearchProgress {grantId} />
+        {:else if isRunning || showOutput}
+          <ResearchVisualization proposalId={proposalIdState} {grantId} />
+        {:else}
+          <div class="glass-card p-8 min-h-[600px]">
+            <div
+              class="relative w-full h-[600px] bg-gradient-to-br from-background/50 to-muted/30 rounded-2xl overflow-hidden"
+            >
               <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center text-muted-foreground">
                   <Brain class="w-16 h-16 mx-auto mb-4 opacity-20" />
-                  <p>Waiting to start...</p>
+                  <p>Waiting to start pixel-art research visualization...</p>
                 </div>
               </div>
-            {:else}
-              <!-- Office Environment -->
-              <div class="absolute inset-0">
-                <!-- Whiteboard (top left) -->
-                <div
-                  class="absolute top-8 left-8 w-48 h-32 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-3"
-                >
-                  <div class="text-xs text-purple-400 font-semibold mb-2">
-                    Ideas Board
-                  </div>
-                  <div class="space-y-1">
-                    {#each whiteboardIdeas as idea}
-                      <div class="text-[10px] text-foreground/80 animate-pulse">
-                        • {idea}
-                      </div>
-                    {/each}
-                  </div>
-                </div>
-
-                <!-- Meeting Table (center) -->
-                <div
-                  class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
-                            w-40 h-24 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-full border border-primary/30"
-                ></div>
-
-                <!-- Researchers -->
-                {#each researcherPositions as researcher, i}
-                  <div
-                    class="absolute w-16 h-16 transition-all duration-[2000ms] ease-in-out"
-                    style="left: {researcher.position.x}%; top: {researcher
-                      .position.y}%; transform: translate(-50%, -50%);"
-                  >
-                    <!-- Avatar -->
-                    <div
-                      class="w-16 h-16 rounded-full {researcher.color} neon-glow-subtle flex items-center justify-center shadow-lg"
-                    >
-                      <span class="text-white font-bold text-xl"
-                        >{researcher.name.charAt(0)}</span
-                      >
-                    </div>
-
-                    <!-- Name tag -->
-                    <div
-                      class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-[10px] text-center whitespace-nowrap text-foreground/80 font-medium"
-                    >
-                      {researcher.name.split(" ")[0]}
-                    </div>
-
-                    <!-- Speech Bubble -->
-                    {#if activeSpeaker === i}
-                      <div
-                        class="absolute -top-16 left-1/2 transform -translate-x-1/2 w-48
-                                  bg-white/95 dark:bg-background/95 backdrop-blur-sm rounded-2xl p-3
-                                  border border-primary/30 shadow-lg animate-fade-in z-10"
-                      >
-                        <div class="text-[10px] text-foreground leading-tight">
-                          {speechBubble}
-                        </div>
-                        <div
-                          class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-white/95 dark:bg-background/95 rotate-45 border-r border-b border-primary/30"
-                        ></div>
-                      </div>
-                    {/if}
-                  </div>
-                {/each}
-
-                <!-- Progress Bar -->
-                <div
-                  class="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-2/3"
-                >
-                  <div class="mb-2 flex justify-between text-xs">
-                    <span class="text-muted-foreground">Overall Progress</span>
-                    <span class="text-primary font-semibold">{progress}%</span>
-                  </div>
-                  <div class="h-3 bg-muted/30 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-gradient-to-r from-purple-500 to-blue-500 neon-glow-purple transition-all duration-300"
-                      style="width: {progress}%"
-                    ></div>
-                  </div>
-                  {#if currentPhase < phases.length}
-                    <div
-                      class="mt-1 text-xs text-center {phases[currentPhase]
-                        .color}"
-                    >
-                      {phases[currentPhase].name}
-                    </div>
-                  {/if}
-                </div>
-              </div>
-            {/if}
+            </div>
           </div>
-        </div>
+        {/if}
       </div>
 
       <!-- Right Sidebar - Activity Feed -->

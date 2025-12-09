@@ -77,5 +77,27 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+
 CREATE TRIGGER update_grants_updated_at BEFORE UPDATE
 ON grants FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Phase 1: Grant Discovery System
+CREATE TABLE IF NOT EXISTS grant_sources (
+    id SERIAL PRIMARY KEY,
+    url TEXT NOT NULL UNIQUE,
+    name TEXT,
+    type TEXT, -- 'portal', 'aggregator', 'direct'
+    last_crawled_at TIMESTAMP,
+    status TEXT DEFAULT 'active'
+);
+
+-- Grant Discovery columns
+ALTER TABLE grants ADD COLUMN IF NOT EXISTS relevance_score INTEGER DEFAULT 0;
+ALTER TABLE grants ADD COLUMN IF NOT EXISTS keywords TEXT[];
+ALTER TABLE grants ADD COLUMN IF NOT EXISTS discovered_at TIMESTAMP DEFAULT NOW();
+ALTER TABLE grants ADD COLUMN IF NOT EXISTS source_id INTEGER REFERENCES grant_sources(id);
+
+-- Ensure uniqueness for automated discovery
+ALTER TABLE grants DROP CONSTRAINT IF EXISTS unique_source_url;
+ALTER TABLE grants ADD CONSTRAINT unique_source_url UNIQUE (source_url);
+

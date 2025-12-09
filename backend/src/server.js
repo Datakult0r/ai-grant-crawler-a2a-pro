@@ -1,14 +1,17 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import grantsRouter from './routes/grants.js';
-import crawlerRouter from './routes/crawler.js';
-import matcherRouter from './routes/matcher.js';
-import thinktankRouter from './routes/thinktank.js';
-import proposalRouter from './routes/proposal.js';
-import researchRouter from './routes/research.js';
-import julesRouter from './routes/jules.js';
-import { startCronJobs } from './jobs/cronScraper.js';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import grantsRouter from "./routes/grants.js";
+import crawlerRouter from "./routes/crawler.js";
+import matcherRouter from "./routes/matcher.js";
+import thinktankRouter from "./routes/thinktank.js";
+import proposalRouter from "./routes/proposal.js";
+import researchRouter from "./routes/research.js";
+import julesRouter from "./routes/jules.js";
+// Phase 1: Grant Discovery Routes & Jobs
+import adminSourcesRouter from "./routes/admin/sources.js";
+import { ScheduledDiscoveryJob } from "./jobs/scheduledDiscovery.js";
+import { startCronJobs } from "./jobs/cronScraper.js";
 
 dotenv.config();
 
@@ -19,28 +22,38 @@ app.use(cors());
 app.use(express.json());
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
 // API routes
-app.use('/api/grants', grantsRouter);
-app.use('/api/crawler', crawlerRouter);
-app.use('/api/matcher', matcherRouter);
-app.use('/api/thinktank', thinktankRouter);
-app.use('/api/proposal', proposalRouter);
-app.use('/api/research', researchRouter);
-app.use('/api/jules', julesRouter);
+app.use("/api/grants", grantsRouter);
+app.use("/api/crawler", crawlerRouter);
+app.use("/api/matcher", matcherRouter);
+app.use("/api/thinktank", thinktankRouter);
+app.use("/api/proposal", proposalRouter);
+app.use("/api/research", researchRouter); // Phase 2: Research Stream
+app.use("/api/jules", julesRouter);
+app.use("/api/admin/sources", adminSourcesRouter); // Phase 1: Sources Admin
 
-// Start 24/7 scraping cron jobs
-startCronJobs();
+// Start Cron Jobs
+startCronJobs(); // Existing scraper
+ScheduledDiscoveryJob.init(); // Phase 1: Daily Grant Discovery
 
 app.listen(PORT, () => {
   console.log(`🚀 AI Grant Discovery API running on port ${PORT}`);
-  console.log(`🔗 Frontend should connect to: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
-  console.log(`🤖 AI-Researcher integration: ${process.env.AI_RESEARCHER_ENABLED ? 'ENABLED' : 'DISABLED'}`);
+  console.log(
+    `🔗 Frontend should connect to: ${
+      process.env.BASE_URL || `http://localhost:${PORT}`
+    }`
+  );
+  console.log(
+    `🤖 AI-Researcher integration: ${
+      process.env.AI_RESEARCHER_ENABLED ? "ENABLED" : "DISABLED"
+    }`
+  );
 });

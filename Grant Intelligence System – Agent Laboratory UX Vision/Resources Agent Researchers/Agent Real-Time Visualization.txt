@@ -1,0 +1,45 @@
+# Agent Laboratory Real-Time Visualization
+
+## Vision
+Low-fidelity pixel-art game view that shows the multi-agent research team working in real-time, with a breadcrumb trail demonstrating progress through the 7 research stages.they clearly state the goal: a low‑fi 7‑stage breadcrumb (is in the folder "breadcrumb". We want to make this look exactly like an academic lab screen to be.
+
+(example of the breadcrumb also includid in the folder)
+
+## Technical Stack
+- Engine LiteCanvas (“~4KB HTML5 canvas engine”) - zero game-dev complexity
+- Game mechanics defined by the SSE stream using the standard EventSource API so every charachter and the user is able to see what is happening in the backend visually as it represents how the data-flows in.
+- Alternative Plain Canvas loop (100 lines of code)
+- Data Source SSE stream from `apiresearchidstream`
+
+## Visual Elements
+1. All "visual elements" and tiles come from the Land of "Pixels lab tileset" (in the folder) plus custom characters. This is our proprietary art source, and we can do with it as we wish.  
+2. Horizontal breadcrumb timeline (7 stages across top) adapted to the same art style.
+3. Agent sprites below timeline (4-5 researcher icons)
+4. Real-time state updates via SSE
+5. Interactive click stage → view losartanas
+6. In “SSE Event Schema”, write it as a short JSON example (valid braces, quoted keys) so someone can implement the producer/consumer directly.
+
+## SSE Event Schema
+{
+  "type": "stage_started",        // stage_started | stage_completed | agent_active | agent_idle
+  "stage": "Literature Review",   // one of the 7 research stages
+  "agent": "lit_reviewer",        // agent identifier
+  "message": "Found 12 relevant papers..."
+}
+
+text
+
+## Implementation Priority
+- Phase 3 (stretch goal)
+- Non-blocking to core Phase 1 (Discovery) + Phase 2 (Research) work
+- Adds 5× debugging speed and user engagement
+Why This Approach Works
+Plug-and-play LiteCanvas is a drop-in library - Antigravity doesn't need to build a game engine​. Litecanvas is tiny (~4KB gzipped), drop‑in, and ideal for simple visualisations; SSE is a natural fit for streaming real‑time agent events.
+
+Lightweight 4KB won't bloat your system​
+The AgentPrism reference (80% debugging reduction) is nice justification; keep it as a single sentence with a link, framed as an analogy: similar visual observability tools show that this style of timeline view cuts debugging time massively.
+Real-time Consumes SSE events naturally, no polling needed
+
+Debuggable Agent visualization tools like AgentPrism show 80% reduction in debugging time with similar approaches​
+
+Reusable Other Agent Lab projects can use the same viewer component
