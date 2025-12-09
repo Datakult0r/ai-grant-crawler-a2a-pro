@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
 
+  /** @type {Array<{id?: number, url: string, name?: string, type?: string, status?: string, last_crawled_at?: string}>} */
   let sources = [];
   let newUrl = "";
   let newName = "";

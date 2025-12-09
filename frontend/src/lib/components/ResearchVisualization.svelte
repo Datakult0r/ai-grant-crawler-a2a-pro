@@ -52,7 +52,7 @@
   ];
 
   // Sprite positions for each stage
-  const STAGE_POSITIONS = {
+  const STAGE_POSITIONS: Record<number, Array<{ x: number; y: number }>> = {
     0: [
       // Literature Review - researchers at desks
       { x: 100, y: 400 },
