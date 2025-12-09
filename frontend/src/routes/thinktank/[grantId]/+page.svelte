@@ -20,8 +20,12 @@
   import ResearchVisualization from "$lib/components/ResearchVisualization.svelte";
   import ResearchProgress from "$lib/components/ResearchProgress.svelte";
 
+  interface Grant {
+    id: number;
+    name: string;
+  }
   let grantId = $page.params.grantId;
-  let grant = $state(null);
+  let grant = $state<Grant | null>(null);
   let isRunning = $state(false);
   let showAgentLab = $state(false);
   let progress = $state(0);
@@ -31,8 +35,8 @@
   >([]);
   let showOutput = $state(false);
   let proposalResult = $state(null);
-  let proposalIdState = $state(null);
-  let error = $state(null);
+  let proposalIdState = $state<string | null>(null);
+  let error = $state<string | null>(null);
   let eventSource: EventSource | null = null;
 
   // Mock company profile
@@ -98,10 +102,16 @@
   onMount(async () => {
     try {
       const grants = await fetchGrants();
-      grant = grants.find((g) => g.id.toString() === grantId);
-      if (!grant) error = "Grant not found";
+      grant = grants.find((g: any) => g.id.toString() === grantId) || null;
+      if (!grant) {
+        error = "Grant not found";
+      }
     } catch (e) {
-      error = e.message;
+      if (e instanceof Error) {
+        error = e.message;
+      } else {
+        error = String(e);
+      }
     }
   });
 
@@ -176,17 +186,21 @@
         proposalResult = data.result;
         isRunning = false;
         showOutput = true;
-        eventSource.close();
+        if (eventSource) eventSource.close();
       });
 
       eventSource.addEventListener("error", (event: any) => {
         console.error("SSE Error:", event);
         error = "Research process failed";
         isRunning = false;
-        eventSource.close();
+        if (eventSource) eventSource.close();
       });
     } catch (e) {
-      error = e.message;
+      if (e instanceof Error) {
+        error = e.message;
+      } else {
+        error = String(e);
+      }
       isRunning = false;
     }
   }
@@ -252,7 +266,7 @@
   <div class="max-w-[1800px] mx-auto">
     <!-- Header -->
     <div class="mb-8 flex items-center gap-4">
-      <Button variant="ghost" size="icon" on:click={() => goto("/")}>
+      <Button variant="ghost" size="icon" onclick={() => goto("/")}>
         <ArrowLeft class="w-5 h-5" />
       </Button>
       <div>
@@ -298,7 +312,7 @@
                 grant.
               </p>
               <button
-                on:click={startThinktank}
+                onclick={startThinktank}
                 class="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold
                                 neon-glow-purple hover:scale-105 transition-all duration-200
                                 flex items-center justify-center gap-2 mb-4"
@@ -308,7 +322,7 @@
               </button>
 
               <button
-                on:click={() => (showAgentLab = true)}
+                onclick={() => (showAgentLab = true)}
                 class="w-full py-4 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold
                                 hover:scale-105 transition-all duration-200
                                 flex items-center justify-center gap-2"
@@ -356,10 +370,10 @@
 
       <!-- Center - Pixel Art Research Visualization -->
       <div class="lg:col-span-6">
-        {#if showAgentLab}
-          <ResearchProgress {grantId} />
-        {:else if isRunning || showOutput}
-          <ResearchVisualization proposalId={proposalIdState} {grantId} />
+        {#if showAgentLab && grantId}
+          <ResearchProgress grantId={grantId} />
+        {:else if (isRunning || showOutput) && grantId}
+          <ResearchVisualization proposalId={proposalIdState} grantId={grantId} />
         {:else}
           <div class="glass-card p-8 min-h-[600px]">
             <div

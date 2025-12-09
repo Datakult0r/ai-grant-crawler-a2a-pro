@@ -23,12 +23,20 @@
   import { fetchGrants, generateProposal } from "$lib/api";
   import { goto } from "$app/navigation";
 
+  interface Grant {
+    id: number;
+    name: string;
+  }
+  interface ProposalSection {
+    title: string;
+    content: string;
+  }
   let grantId = $page.params.grantId;
-  let grant = $state(null);
+  let grant = $state<Grant | null>(null);
   let loading = $state(true);
   let generating = $state(false);
-  let proposal = $state(null);
-  let error = $state(null);
+  let proposal = $state<ProposalSection[] | null>(null);
+  let error = $state<string | null>(null);
 
   // Mock company profile for now - in real app this would come from user context
   const companyProfile = {
@@ -42,13 +50,17 @@
       // In a real app we would have a fetchGrant(id) API
       // For now we fetch all and find the one we need
       const grants = await fetchGrants();
-      grant = grants.find((g) => g.id.toString() === grantId);
+      grant = grants.find((g: any) => g.id.toString() === grantId) || null;
 
       if (!grant) {
         error = "Grant not found";
       }
     } catch (e) {
-      error = e.message;
+      if (e instanceof Error) {
+        error = e.message;
+      } else {
+        error = String(e);
+      }
     } finally {
       loading = false;
     }
@@ -92,19 +104,23 @@
         eventSource.close();
       });
     } catch (e) {
-      error = e.message;
+      if (e instanceof Error) {
+        error = e.message;
+      } else {
+        error = String(e);
+      }
       generating = false;
     }
   }
 
-  function parseProposal(text) {
+  function parseProposal(text: string): ProposalSection[] {
     // Simple parser to convert markdown-like text to sections
     // This is a placeholder. Real implementation would be more robust.
     if (!text) return [];
 
-    const sections = [];
+    const sections: ProposalSection[] = [];
     const lines = text.split("\n");
-    let currentSection = null;
+    let currentSection: ProposalSection | null = null;
 
     lines.forEach((line) => {
       if (line.startsWith("## ")) {
@@ -129,7 +145,7 @@
   <div class="max-w-7xl mx-auto space-y-6">
     <!-- Header -->
     <div class="flex items-center gap-4">
-      <Button variant="ghost" size="icon" on:click={() => goto("/")}>
+      <Button variant="ghost" size="icon" onclick={() => goto("/")}>
         <ArrowLeft class="w-5 h-5" />
       </Button>
       <div class="space-y-2">
@@ -173,7 +189,7 @@
             Generate a complete first draft for this grant application using our
             Fast Track AI model.
           </p>
-          <Button size="lg" class="neon-glow-purple" on:click={handleGenerate}>
+          <Button size="lg" class="neon-glow-purple" onclick={handleGenerate}>
             <RefreshCw class="w-4 h-4 mr-2" />
             Generate Proposal
           </Button>
@@ -259,7 +275,11 @@
           </Card>
 
           <!-- Sections -->
-          <Accordion.Root class="space-y-4" value={proposal[0]?.title}>
+          <Accordion.Root
+            type="single"
+            class="space-y-4"
+            value={proposal[0]?.title}
+          >
             {#each proposal as section, i}
               <Accordion.Item
                 value={section.title}

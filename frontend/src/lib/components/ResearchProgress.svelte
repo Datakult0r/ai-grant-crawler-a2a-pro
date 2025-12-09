@@ -1,11 +1,14 @@
 <script>
   import { onMount, onDestroy } from "svelte";
 
+  /** @type {string | number} */
   export let grantId;
+  /** @type {Array<{type: string, message: string}>} */
   let logs = [];
   let status = "idle";
   let currentStage = "Initializing";
-  let eventSource;
+  /** @type {EventSource | null} */
+  let eventSource = null;
 
   function startResearch() {
     if (eventSource) eventSource.close();
@@ -26,7 +29,7 @@
         logs = [...logs, { type: "info", message: `--- ${data.stage} ---` }];
       } else if (data.type === "status") {
         status = data.status;
-        if (status === "completed" || status === "failed") eventSource.close();
+        if (status === "completed" || status === "failed") eventSource?.close();
       } else if (data.type === "error") {
         logs = [...logs, { type: "error", message: data.message }];
       }
@@ -34,7 +37,7 @@
 
     eventSource.onerror = () => {
       logs = [...logs, { type: "error", message: "Connection lost" }];
-      eventSource.close();
+      eventSource?.close();
     };
   }
 

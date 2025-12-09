@@ -24,31 +24,47 @@
   import { fetchGrants } from "$lib/api";
 
   // Grant data state
-  let grants = $state([]);
+  interface Grant {
+    id: number;
+    name: string;
+    source: string;
+    region: string;
+    amount: string;
+    relevance: number;
+    deadline: string;
+    daysLeft: number;
+  }
+  let grants = $state<Grant[]>([]);
   let loading = $state(true);
-  let error = $state(null);
+  let error = $state<string | null>(null);
 
   // Gatekeeper state
   let showGatekeeper = $state(false);
-  let selectedGrant = $state(null);
+  let selectedGrant = $state<Grant | null>(null);
 
   onMount(async () => {
     try {
       grants = await fetchGrants();
     } catch (e) {
       console.error(e);
-      error = e.message;
+      if (e instanceof Error) {
+        error = e.message;
+      } else {
+        error = String(e);
+      }
     } finally {
       loading = false;
     }
   });
 
-  function handleApply(grant) {
+  function handleApply(grant: Grant) {
     selectedGrant = grant;
     showGatekeeper = true;
   }
 
-  function handleModeSelect(event) {
+  function handleModeSelect(
+    event: CustomEvent<{ mode: string; grant: Grant }>
+  ) {
     const { mode, grant } = event.detail;
     if (mode === "fast") {
       goto(`/writer/${grant.id}`);
@@ -242,7 +258,7 @@
           <!-- Action Button -->
           <Button
             class="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 neon-glow-purple"
-            on:click={() => handleApply(grant)}
+            onclick={() => handleApply(grant)}
           >
             Apply Now
           </Button>
