@@ -1,7 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: Escape backslash in LaTeX percentage string\n\nFixed Python SyntaxWarning by properly escaping the backslash in the f-string\nthat describes how to include percentage signs in LaTeX documents.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(cat:*)",
+      "Bash(git config:*)",
+      "Bash(gh issue view:*)",
+      "YOLO mode",
+      "allows cloud to continue and run itself unrestrained without stopping.",
+      "Bash(git push:*)",
+      "Bash(npm run check:*)",
+      "Bash(node --check:*)",
+      "Bash(python -m compileall:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(gh --version:*)"
     ],
     "deny": [],
     "ask": []

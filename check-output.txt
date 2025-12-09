@@ -1,0 +1,290 @@
+
+> base-sveltekit-app@0.0.1 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend
+Getting Svelte diagnostics...
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:44:15
+[31mError[39m: Parameter 'canvas' implicitly has an 'any' type. 
+[36mexport class LabRenderer {
+  constructor([35mcanvas[36m, options = {}) {
+    this.canvas = canvas;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:47:26
+[31mError[39m: Property 'width' does not exist on type '{}'. 
+[36m    this.ctx = canvas.getContext("2d", { alpha: false });
+    this.width = options.[35mwidth[36m || 800;
+    this.height = options.height || 600;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:48:27
+[31mError[39m: Property 'height' does not exist on type '{}'. 
+[36m    this.width = options.width || 800;
+    this.height = options.[35mheight[36m || 600;
+    this.running = false;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:50:24
+[31mError[39m: Property 'fps' does not exist on type '{}'. 
+[36m    this.running = false;
+    this.fps = options.[35mfps[36m || 30;
+    this.frameTime = 1000 / this.fps;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:75:20
+[31mError[39m: Parameter 'assets' implicitly has an 'any' type. 
+[36m   */
+  async loadAssets([35massets[36m) {
+    const promises = Object.entries(assets).map(([key, src]) => {[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:80:11
+[31mError[39m: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'. 
+[36m        img.onload = () => {
+          [35mthis.images[key][36m = img;
+          resolve();[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:81:11
+[31mError[39m: Expected 1 argument, but got 0. 'new Promise()' needs a JSDoc hint to produce a 'resolve' that can be called without arguments. 
+[36m          this.images[key] = img;
+          [35mresolve[36m();
+        };[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:96:9
+[31mError[39m: Parameter 'updateFn' implicitly has an 'any' type. 
+[36m   */
+  start([35mupdateFn[36m, drawFn) {
+    this.updateFn = updateFn;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:96:19
+[31mError[39m: Parameter 'drawFn' implicitly has an 'any' type. 
+[36m   */
+  start(updateFn, [35mdrawFn[36m) {
+    this.updateFn = updateFn;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:158:10
+[31mError[39m: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'. 
+[36m  drawSprite(imageKey, sx, sy, sw, sh, dx, dy, dw = sw, dh = sh) {
+    if (![35mthis.images[imageKey][36m) {
+      console.warn(`[LabRenderer] Image not loaded: ${imageKey}`);[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:163:24
+[31mError[39m: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'. 
+[36m
+    this.ctx.drawImage([35mthis.images[imageKey][36m, sx, sy, sw, sh, dx, dy, dw, dh);
+  }[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:169:13
+[31mError[39m: Parameter 'imageKey' implicitly has an 'any' type. 
+[36m   */
+  drawImage([35mimageKey[36m, x, y, width, height) {
+    if (!this.images[imageKey]) return;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:169:23
+[31mError[39m: Parameter 'x' implicitly has an 'any' type. 
+[36m   */
+  drawImage(imageKey, [35mx[36m, y, width, height) {
+    if (!this.images[imageKey]) return;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:169:26
+[31mError[39m: Parameter 'y' implicitly has an 'any' type. 
+[36m   */
+  drawImage(imageKey, x, [35my[36m, width, height) {
+    if (!this.images[imageKey]) return;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:169:29
+[31mError[39m: Parameter 'width' implicitly has an 'any' type. 
+[36m   */
+  drawImage(imageKey, x, y, [35mwidth[36m, height) {
+    if (!this.images[imageKey]) return;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:169:36
+[31mError[39m: Parameter 'height' implicitly has an 'any' type. 
+[36m   */
+  drawImage(imageKey, x, y, width, [35mheight[36m) {
+    if (!this.images[imageKey]) return;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:170:10
+[31mError[39m: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{}'. 
+[36m  drawImage(imageKey, x, y, width, height) {
+    if (![35mthis.images[imageKey][36m) return;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:173:26
+[31mError[39m: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{}'. 
+[36m    if (width && height) {
+      this.ctx.drawImage([35mthis.images[imageKey][36m, x, y, width, height);
+    } else {[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:175:26
+[31mError[39m: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{}'. 
+[36m    } else {
+      this.ctx.drawImage([35mthis.images[imageKey][36m, x, y);
+    }[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:182:8
+[31mError[39m: Parameter 'x' implicitly has an 'any' type. 
+[36m   */
+  rect([35mx[36m, y, width, height, color) {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:182:11
+[31mError[39m: Parameter 'y' implicitly has an 'any' type. 
+[36m   */
+  rect(x, [35my[36m, width, height, color) {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:182:14
+[31mError[39m: Parameter 'width' implicitly has an 'any' type. 
+[36m   */
+  rect(x, y, [35mwidth[36m, height, color) {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:182:21
+[31mError[39m: Parameter 'height' implicitly has an 'any' type. 
+[36m   */
+  rect(x, y, width, [35mheight[36m, color) {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:182:29
+[31mError[39m: Parameter 'color' implicitly has an 'any' type. 
+[36m   */
+  rect(x, y, width, height, [35mcolor[36m) {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:190:15
+[31mError[39m: Parameter 'x' implicitly has an 'any' type. 
+[36m   */
+  rectOutline([35mx[36m, y, width, height, color, lineWidth = 1) {
+    this.ctx.strokeStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:190:18
+[31mError[39m: Parameter 'y' implicitly has an 'any' type. 
+[36m   */
+  rectOutline(x, [35my[36m, width, height, color, lineWidth = 1) {
+    this.ctx.strokeStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:190:21
+[31mError[39m: Parameter 'width' implicitly has an 'any' type. 
+[36m   */
+  rectOutline(x, y, [35mwidth[36m, height, color, lineWidth = 1) {
+    this.ctx.strokeStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:190:28
+[31mError[39m: Parameter 'height' implicitly has an 'any' type. 
+[36m   */
+  rectOutline(x, y, width, [35mheight[36m, color, lineWidth = 1) {
+    this.ctx.strokeStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:190:36
+[31mError[39m: Parameter 'color' implicitly has an 'any' type. 
+[36m   */
+  rectOutline(x, y, width, height, [35mcolor[36m, lineWidth = 1) {
+    this.ctx.strokeStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:199:10
+[31mError[39m: Parameter 'x' implicitly has an 'any' type. 
+[36m   */
+  circle([35mx[36m, y, radius, color) {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:199:13
+[31mError[39m: Parameter 'y' implicitly has an 'any' type. 
+[36m   */
+  circle(x, [35my[36m, radius, color) {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:199:16
+[31mError[39m: Parameter 'radius' implicitly has an 'any' type. 
+[36m   */
+  circle(x, y, [35mradius[36m, color) {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:199:24
+[31mError[39m: Parameter 'color' implicitly has an 'any' type. 
+[36m   */
+  circle(x, y, radius, [35mcolor[36m) {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:209:8
+[31mError[39m: Parameter 'str' implicitly has an 'any' type. 
+[36m   */
+  text([35mstr[36m, x, y, color = "#ffffff", font = "12px monospace") {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:209:13
+[31mError[39m: Parameter 'x' implicitly has an 'any' type. 
+[36m   */
+  text(str, [35mx[36m, y, color = "#ffffff", font = "12px monospace") {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:209:16
+[31mError[39m: Parameter 'y' implicitly has an 'any' type. 
+[36m   */
+  text(str, x, [35my[36m, color = "#ffffff", font = "12px monospace") {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:218:16
+[31mError[39m: Parameter 'str' implicitly has an 'any' type. 
+[36m   */
+  textCentered([35mstr[36m, x, y, color = "#ffffff", font = "12px monospace") {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:218:21
+[31mError[39m: Parameter 'x' implicitly has an 'any' type. 
+[36m   */
+  textCentered(str, [35mx[36m, y, color = "#ffffff", font = "12px monospace") {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\litecanvasRenderer.js[39m:218:24
+[31mError[39m: Parameter 'y' implicitly has an 'any' type. 
+[36m   */
+  textCentered(str, x, [35my[36m, color = "#ffffff", font = "12px monospace") {
+    this.ctx.fillStyle = color;[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\components\ResearchProgress.svelte[39m:32:60
+[31mError[39m: 'eventSource' is possibly 'null'. (js)
+[36m        status = data.status;
+        if (status === "completed" || status === "failed") [35meventSource[36m.close();
+      } else if (data.type === "error") {[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\lib\components\ResearchProgress.svelte[39m:40:7
+[31mError[39m: 'eventSource' is possibly 'null'. (js)
+[36m      logs = [...logs, { type: "error", message: "Connection lost" }];
+      [35meventSource[36m.close();
+    };[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\routes\+page.svelte[39m:261:16
+[31mError[39m: Argument of type '"click"' is not assignable to parameter of type 'never'. (ts)
+[36m            class="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 neon-glow-purple"
+            on:[35mclick[36m={() => handleApply(grant)}
+          >[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\routes\thinktank\[grantId]\+page.svelte[39m:374:30
+[31mError[39m: Type 'string | undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'string | number'. (ts)
+[36m        {#if showAgentLab}
+          <ResearchProgress {[35mgrantId[36m} />
+        {:else if isRunning || showOutput}[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\routes\thinktank\[grantId]\+page.svelte[39m:376:64
+[31mError[39m: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'. (ts)
+[36m        {:else if isRunning || showOutput}
+          <ResearchVisualization proposalId={proposalIdState} {[35mgrantId[36m} />
+        {:else}[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\routes\writer\+page.svelte[39m:176:11
+[31mError[39m: Object literal may only specify known properties, and '"collapsible"' does not exist in type 'Omit<AccordionRootSinglePropsWithoutHTML, "child" | "children"> & { child?: Snippet<[{ props: Record<string, unknown>; }]> | undefined; children?: Snippet<...> | undefined; style?: any; ref?: HTMLElement | ... 1 more ... | undefined; } & Without<...>'. (ts)
+[36m          type="single"
+          [35mcollapsible[36m
+          class="space-y-4"[39m
+
+c:\Users\phili\Documents\Coding\AgentThinkTank\ai-grant-crawler-a2a-pro\frontend\[32msrc\routes\writer\[grantId]\+page.svelte[39m:280:13
+[31mError[39m: Object literal may only specify known properties, and '"collapsible"' does not exist in type 'Omit<AccordionRootSinglePropsWithoutHTML, "child" | "children"> & { child?: Snippet<[{ props: Record<string, unknown>; }]> | undefined; children?: Snippet<...> | undefined; style?: any; ref?: HTMLElement | ... 1 more ... | undefined; } & Without<...>'. (ts)
+[36m            type="single"
+            [35mcollapsible[36m
+            class="space-y-4"[39m
+
+====================================
+[31msvelte-check found 46 errors and 0 warnings in 6 files
+[39m

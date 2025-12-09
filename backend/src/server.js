@@ -53,7 +53,7 @@ app.listen(PORT, () => {
   );
   console.log(
     `🤖 AI-Researcher integration: ${
-      process.env.AI_RESEARCHER_ENABLED ? "ENABLED" : "DISABLED"
+      process.env.AI_RESEARCHER_ENABLED === "true" ? "ENABLED" : "DISABLED"
     }`
   );
 });
