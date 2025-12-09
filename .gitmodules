@@ -1,3 +1,0 @@
-[submodule "backend/ai-researcher"]
-	path = backend/ai-researcher
-	url = https://github.com/SamuelSchmidgall/AgentLaboratory.git
