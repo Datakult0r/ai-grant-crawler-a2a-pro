@@ -33,3 +33,34 @@ export async function checkJulesHealth() {
     if (!res.ok) throw new Error('Failed to check Jules health');
     return res.json();
 }
+
+export interface Alert {
+    id: number | string;
+    type: 'urgent' | 'warning' | 'info' | 'success';
+    title: string;
+    description: string;
+    daysLeft: number | null;
+    grant: string;
+    grantId: number;
+    amount: string;
+}
+
+export interface AlertsResponse {
+    urgent: Alert[];
+    warning: Alert[];
+    info: Alert[];
+    completed: Alert[];
+    stats: {
+        urgent: number;
+        warning: number;
+        info: number;
+        completed: number;
+        total: number;
+    };
+}
+
+export async function fetchAlerts(): Promise<AlertsResponse> {
+    const res = await fetch(`${API_BASE_URL}/alerts`);
+    if (!res.ok) throw new Error('Failed to fetch alerts');
+    return res.json();
+}
