@@ -1,6 +1,9 @@
+import { env } from "./config/env.js"; // Validation runs on import
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import morgan from "morgan";
 import grantsRouter from "./routes/grants.js";
 import crawlerRouter from "./routes/crawler.js";
 import matcherRouter from "./routes/matcher.js";
@@ -13,20 +16,30 @@ import adminSourcesRouter from "./routes/admin/sources.js";
 import { ScheduledDiscoveryJob } from "./jobs/scheduledDiscovery.js";
 import { startCronJobs } from "./jobs/cronScraper.js";
 
-dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = env.port;
 
-app.use(cors());
+// Security Middleware
+app.use(helmet());
+app.use(cors()); // Configure specific origin in production if needed
 app.use(express.json());
+app.use(morgan("dev")); // Logging
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
 
 // Health check
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || "development",
+    environment: env.nodeEnv,
   });
 });
 
@@ -46,14 +59,10 @@ ScheduledDiscoveryJob.init(); // Phase 1: Daily Grant Discovery
 
 app.listen(PORT, () => {
   console.log(`🚀 AI Grant Discovery API running on port ${PORT}`);
-  console.log(
-    `🔗 Frontend should connect to: ${
-      process.env.BASE_URL || `http://localhost:${PORT}`
-    }`
-  );
+  console.log(`🔗 Frontend should connect to: http://localhost:${PORT}`);
   console.log(
     `🤖 AI-Researcher integration: ${
-      process.env.AI_RESEARCHER_ENABLED === "true" ? "ENABLED" : "DISABLED"
+      env.aiResearcherEnabled ? "ENABLED" : "DISABLED"
     }`
   );
 });

@@ -34,15 +34,6 @@ export class ResearchService {
       return;
     }
 
-    // 2. Prepare payload
-    // We reuse existing data to avoid re-crawling if possible, or provide context.
-    const researchContext = {
-      title: grant.name,
-      description: grant.description,
-      url: grant.source_url,
-      raw_data: grant.raw_data,
-    };
-
     // 3. Create Research Record
     const { data: researchRecord, error: researchError } = await supabase
       .from("grant_research")
@@ -60,11 +51,22 @@ export class ResearchService {
           message: "Failed to create research record",
         })}\n\n`
       );
-      return; // Don't end res yet if we want to keep connection open for debug? No, fail hard.
+      return;
     }
 
+    // 2. Prepare payload (moved after record creation to include ID)
+    const researchContext = {
+      proposal_id: researchRecord.id, // Use research record ID for workspace isolation
+      title: grant.name,
+      description: grant.description,
+      url: grant.source_url,
+      raw_data: grant.raw_data,
+    };
+
     // 4. Spawn Python Process - Using bridge script for Agent Laboratory
-    const pythonScriptPath = path.resolve("ai-researcher/grant_research_bridge.py");
+    const pythonScriptPath = path.resolve(
+      "ai-researcher/grant_research_bridge.py"
+    );
 
     const pythonProcess = spawn(
       "python",

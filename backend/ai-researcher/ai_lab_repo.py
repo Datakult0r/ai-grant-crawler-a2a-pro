@@ -498,6 +498,14 @@ class LaboratoryWorkflow:
                 arxiv_paper = f"```EXPIRATION {self.arxiv_paper_exp_time}\n" + full_text + "```"
                 feedback = arxiv_paper
 
+            # search web using firecrawl
+            elif "```SEARCH_WEB" in resp:
+                query = extract_prompt(resp, "SEARCH_WEB")
+                fc_search = FirecrawlSearch()
+                web_results = fc_search.search_web(query)
+                feedback = f"Web Search Results for '{query}':\n{web_results}"
+
+
             # if add paper, extract and add to lit review, provide feedback
             elif "```ADD_PAPER" in resp:
                 query = extract_prompt(resp, "ADD_PAPER")

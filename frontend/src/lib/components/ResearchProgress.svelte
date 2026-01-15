@@ -1,5 +1,6 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onDestroy } from "svelte";
+  import { API_BASE_URL } from "$lib/api";
 
   /** @type {string | number} */
   export let grantId;
@@ -15,16 +16,35 @@
     status = "running";
     logs = [];
 
-    eventSource = new EventSource(
-      `http://localhost:3000/api/research/${grantId}/research`
-    );
+    // Use centralized API URL from config
+    const apiUrl = API_BASE_URL.replace("/api", ""); // Remove /api suffix since we're adding it below
+    eventSource = new EventSource(`${apiUrl}/api/research/${grantId}/research`);
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
       if (data.type === "log") {
         logs = [...logs, data];
+      } else if (data.type === "phase") {
+        // Map phase ID back to string if needed, or backend can send name
+        const phases = [
+          "Initializing",
+          "Brainstorming",
+          "Deep Research",
+          "Synthesis",
+          "Writing",
+          "Refinement",
+          "Finalization",
+        ];
+        currentStage = phases[data.phase] || "Processing";
+        logs = [
+          ...logs,
+          { type: "info", message: `>>> Entering Phase: ${currentStage} <<<` },
+        ];
+      } else if (data.type === "progress") {
+        // Optional: add progress bar handler here
       } else if (data.type === "stage_started") {
+        // Fallback or specific python bridge event
         currentStage = data.stage;
         logs = [...logs, { type: "info", message: `--- ${data.stage} ---` }];
       } else if (data.type === "status") {
@@ -36,8 +56,14 @@
     };
 
     eventSource.onerror = () => {
-      logs = [...logs, { type: "error", message: "Connection lost" }];
+      logs = [...logs, { type: "error", message: "Connection lost - reconnecting..." }];
       eventSource?.close();
+      // Auto-reconnect after 3 seconds to keep agents running
+      setTimeout(() => {
+        if (status === "running") {
+          startResearch();
+        }
+      }, 3000);
     };
   }
 

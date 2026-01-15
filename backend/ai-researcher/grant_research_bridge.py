@@ -44,7 +44,7 @@ def create_grant_yaml_config(grant_data, output_path="grant_research_config.yaml
         "num-papers-to-write": 1,
         "parallel-labs": False,
         "num-parallel-labs": 1,
-        "except-if-fail": False,
+        "except-if-fail": True,  # Continue even if errors occur
         "agentRxiv": False,
         "construct-agentRxiv": False,
         "agentrxiv-papers": 3,
@@ -149,11 +149,16 @@ def run_agent_laboratory(grant_data):
         if not os.path.exists(research_dir):
             os.mkdir(research_dir)
 
-        lab_dir = os.path.join(research_dir, "research_dir_0_lab_0")
+        # Use proposal_id for isolation (Virtualization)
+        proposal_id = grant_data.get("proposal_id", "0")
+        lab_dir = os.path.join(research_dir, f"research_dir_{proposal_id}")
+        
         if not os.path.exists(lab_dir):
             os.mkdir(lab_dir)
-            os.mkdir(os.path.join(lab_dir, "src"))
-            os.mkdir(os.path.join(lab_dir, "tex"))
+            if not os.path.exists(os.path.join(lab_dir, "src")):
+                os.mkdir(os.path.join(lab_dir, "src"))
+            if not os.path.exists(os.path.join(lab_dir, "tex")):
+                os.mkdir(os.path.join(lab_dir, "tex"))
 
         stream_phase_update("Literature Review", "Beginning literature review phase")
 

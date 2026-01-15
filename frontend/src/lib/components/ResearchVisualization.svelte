@@ -168,7 +168,7 @@
 
   /**
    * Connect to SSE stream for real-time updates
-   * Primary endpoint: /api/research/{grantId}/stream
+   * Primary endpoint: /api/research/{grantId}/research
    * Fallback: /api/proposal/{proposalId}/stream
    */
   function connectToSSE() {
@@ -177,7 +177,7 @@
     // Use grantId-based endpoint as primary (per spec)
     let sseUrl: string;
     if (grantId) {
-      sseUrl = `${apiUrl}/api/research/${grantId}/stream`;
+      sseUrl = `${apiUrl}/api/research/${grantId}/research`;
     } else if (proposalId) {
       sseUrl = `${apiUrl}/api/proposal/${proposalId}/stream`;
     } else {

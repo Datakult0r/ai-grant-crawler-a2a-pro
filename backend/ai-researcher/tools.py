@@ -323,3 +323,62 @@ def execute_code(code_str, timeout=600, MAX_LEN=1000):
         if not output_queue.empty(): output = output_queue.get()
         else: output = ""
         return output
+
+
+class FirecrawlSearch:
+    """
+    Tool for searching the web using Firecrawl API.
+    """
+    def __init__(self):
+        self.api_key = os.getenv("FIRECRAWL_API_KEY")
+        self.base_url = "https://api.firecrawl.dev/v1"
+        if not self.api_key:
+            print("Warning: FIRECRAWL_API_KEY not found. Web search will fail.")
+
+    def search_web(self, query, limit=5):
+        """
+        Search the web for the given query.
+        Returns a formatted string of results.
+        """
+        if not self.api_key:
+            return "Error: Firecrawl API key is missing."
+
+        try:
+            url = f"{self.base_url}/search"
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "query": query,
+                "limit": limit,
+                "scrapeOptions": {
+                    "formats": ["markdown"]
+                }
+            }
+            
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            
+            if not data.get("success"):
+                return f"Firecrawl Error: {data.get('error', 'Unknown error')}"
+            
+            results = data.get("data", [])
+            if not results:
+                return "No results found."
+
+            formatted_results = []
+            for item in results:
+                title = item.get("title", "No Title")
+                desc = item.get("description", "No description")
+                link = item.get("url", "")
+                content = item.get("markdown", "")[:500] + "..." # Truncate markdown
+                
+                entry = f"Title: {title}\nURL: {link}\nDescription: {desc}\nSnippet: {content}\n"
+                formatted_results.append(entry)
+            
+            return "\n---\n".join(formatted_results)
+
+        except Exception as e:
+            return f"Error performing web search: {str(e)}"

@@ -6,7 +6,14 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+    "auto-accept": "node auto-accept.js",
+    "dev:with-auto": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run auto-accept\"",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "verify": "node verify-setup.js",
+    "setup": "npm run verify && npm run install:all"
+  },
+  "dependencies": {
+    "puppeteer": "^22.0.0"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
