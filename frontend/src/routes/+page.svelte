@@ -22,6 +22,7 @@
 
   import { onMount } from "svelte";
   import { fetchGrants } from "$lib/api";
+  import { toasts } from "$lib/stores/toast";
 
   // Grant data state
   interface Grant {
@@ -45,13 +46,14 @@
   onMount(async () => {
     try {
       grants = await fetchGrants();
+      if (grants.length > 0) {
+        toasts.success('Grants loaded', `Found ${grants.length} grants`);
+      }
     } catch (e) {
       console.error(e);
-      if (e instanceof Error) {
-        error = e.message;
-      } else {
-        error = String(e);
-      }
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      error = errorMessage;
+      toasts.error('Failed to load grants', errorMessage);
     } finally {
       loading = false;
     }
