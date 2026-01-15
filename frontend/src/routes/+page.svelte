@@ -6,6 +6,8 @@
     Clock,
     Target,
     Award,
+    AlertCircle,
+    Loader2,
   } from "lucide-svelte";
   import { Button } from "$lib/components/ui/button";
   import {
@@ -23,7 +25,21 @@
   import { onMount } from "svelte";
   import { fetchGrants } from "$lib/api";
 
-  // Grant data state
+  // Grant data from Supabase
+  interface GrantData {
+    id: number;
+    name: string;
+    source: string;
+    category: string;
+    funding_amount: string;
+    relevance_score: number;
+    deadline: string;
+    source_url: string;
+    description: string;
+    created_at: string;
+  }
+
+  // Transformed grant for display
   interface Grant {
     id: number;
     name: string;
@@ -34,7 +50,8 @@
     deadline: string;
     daysLeft: number;
   }
-  let grants = $state<Grant[]>([]);
+
+  let rawGrants = $state<GrantData[]>([]);
   let loading = $state(true);
   let error = $state<string | null>(null);
 
@@ -42,9 +59,71 @@
   let showGatekeeper = $state(false);
   let selectedGrant = $state<Grant | null>(null);
 
+  // Source badge colors
+  const sourceColors: Record<string, { bg: string; text: string; border: string }> = {
+    'ANI': { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' },
+    'IAPMEI': { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30' },
+    'COMPETE': { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' },
+    'Horizon EU': { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30' },
+    'Horizon Europe': { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30' },
+    'EIC': { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' },
+    'NSF': { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' },
+  };
+
+  function getSourceColors(source: string) {
+    // Check if source contains any known source name
+    for (const [key, colors] of Object.entries(sourceColors)) {
+      if (source.toLowerCase().includes(key.toLowerCase())) {
+        return colors;
+      }
+    }
+    return { bg: 'bg-primary/20', text: 'text-primary', border: 'border-primary/30' };
+  }
+
+  // Calculate days until deadline
+  function calculateDaysLeft(deadline: string | null): number {
+    if (!deadline) return 999;
+    const deadlineDate = new Date(deadline);
+    const today = new Date();
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  }
+
+  // Transform raw grants to display format
+  function transformGrants(raw: GrantData[]): Grant[] {
+    return raw.map(g => ({
+      id: g.id,
+      name: g.name || 'Untitled Grant',
+      source: g.source || 'Unknown',
+      region: g.category || 'General',
+      amount: g.funding_amount || 'TBD',
+      relevance: g.relevance_score || 0,
+      deadline: g.deadline ? new Date(g.deadline).toLocaleDateString() : 'TBD',
+      daysLeft: calculateDaysLeft(g.deadline),
+    }));
+  }
+
+  // Computed grants from raw data
+  let grants = $derived(transformGrants(rawGrants));
+
+  // Calculate stats dynamically from grants data
+  let stats = $derived({
+    total: rawGrants.length,
+    newToday: rawGrants.filter(g => {
+      const created = new Date(g.created_at);
+      const today = new Date();
+      return created.toDateString() === today.toDateString();
+    }).length,
+    deadlinesWeek: grants.filter(g => g.daysLeft <= 7 && g.daysLeft > 0).length,
+    successRate: rawGrants.length > 0 
+      ? Math.round(rawGrants.reduce((sum, g) => sum + (g.relevance_score || 0), 0) / rawGrants.length)
+      : 0,
+  });
+
   onMount(async () => {
     try {
-      grants = await fetchGrants();
+      rawGrants = await fetchGrants();
     } catch (e) {
       console.error(e);
       if (e instanceof Error) {
@@ -73,15 +152,18 @@
     }
   }
 
-  const stats = {
-    total: 537,
-    newToday: 12,
-    deadlinesWeek: 8,
-    successRate: 68,
-  };
-
   let searchQuery = $state("");
   let selectedRegion = $state("all");
+
+  // Filter grants based on search query
+  let filteredGrants = $derived(
+    grants.filter(g => 
+      searchQuery === "" || 
+      g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      g.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      g.region.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  );
 </script>
 
 <div class="p-8 space-y-6">
@@ -197,9 +279,44 @@
     </CardContent>
   </Card>
 
+  <!-- Loading State -->
+  {#if loading}
+    <Card class="glass-card border-primary/30">
+      <CardContent class="p-8 flex flex-col items-center justify-center gap-4">
+        <Loader2 class="w-8 h-8 text-primary animate-spin" />
+        <p class="text-muted-foreground">Loading grants from database...</p>
+      </CardContent>
+    </Card>
+  {:else if error}
+    <Card class="glass-card border-destructive/30">
+      <CardContent class="p-8 flex flex-col items-center justify-center gap-4">
+        <AlertCircle class="w-8 h-8 text-destructive" />
+        <p class="text-destructive font-medium">Failed to load grants</p>
+        <p class="text-muted-foreground text-sm">{error}</p>
+        <Button variant="outline" onclick={() => window.location.reload()}>
+          Try Again
+        </Button>
+      </CardContent>
+    </Card>
+  {:else if filteredGrants.length === 0}
+    <Card class="glass-card border-secondary/30">
+      <CardContent class="p-8 flex flex-col items-center justify-center gap-4">
+        <Target class="w-8 h-8 text-secondary" />
+        <p class="text-muted-foreground">
+          {searchQuery ? 'No grants match your search' : 'No grants available yet'}
+        </p>
+        {#if searchQuery}
+          <Button variant="outline" onclick={() => searchQuery = ""}>
+            Clear Search
+          </Button>
+        {/if}
+      </CardContent>
+    </Card>
+  {/if}
+
   <!-- Grants Grid -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    {#each grants as grant}
+    {#each filteredGrants as grant}
       <Card
         class="glass-card hover:border-primary/50 transition-all duration-300 group"
       >
@@ -212,7 +329,8 @@
                 {grant.name}
               </CardTitle>
               <div class="flex gap-2">
-                <Badge variant="outline" class="border-primary/30 text-primary">
+                {@const colors = getSourceColors(grant.source)}
+                <Badge variant="outline" class="{colors.border} {colors.text} {colors.bg}">
                   {grant.source}
                 </Badge>
                 <Badge
