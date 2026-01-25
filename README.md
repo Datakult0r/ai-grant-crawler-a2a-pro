@@ -27,35 +27,35 @@ graph LR
     %% PHASE 1: DISCOVERY
     subgraph PHASE_1 [PHASE 1: DISCOVERY & MATCHING]
         direction TB
-        Sources[📡 Sources: EU/NSF/Foundations] --> Firecrawl[🔥 Firecrawl Engine]
-        Firecrawl --> Analyzer[💎 AI Feature/Relevance Extractor]
+        Sources[Sources: EU/NSF/Foundations] --> Firecrawl[Firecrawl Engine]
+        Firecrawl --> Analyzer[AI Feature/Relevance Extractor]
         Analyzer -->|Score > 50| DB[(Supabase DB)]
-        Analyzer -->|Score < 50| Discard[🗑️ Discard]
+        Analyzer -->|Score < 50| Discard[Discard]
     end
 
     %% PHASE 2: INTERFACE
     subgraph PHASE_2 [PHASE 2: PLATFORM]
-        DB <==>|Real-time| Dashboard[🖥️ SvelteKit Dashboard]
-        Dashboard -->|User Clicks Apply| API[⚡ API Gateway]
+        DB <==>|Real-time| Dashboard[SvelteKit Dashboard]
+        Dashboard -->|User Clicks Apply| API[API Gateway]
     end
 
     %% PHASE 3: ORCHESTRATION
     subgraph PHASE_3 [PHASE 3: ORCHESTRATION]
         API --> Strategy{Strategy Router}
-        Strategy -->|Fast Track| Gemini[✨ Gemini 2.5 Pro]
-        Strategy -->|Research Track| LabRunner[🔬 Lab Orchestrator]
+        Strategy -->|Fast Track| Gemini[Gemini 2.5 Pro]
+        Strategy -->|Research Track| LabRunner[Lab Orchestrator]
     end
 
     %% PHASE 4: AGENT LAB
     subgraph PHASE_4 [PHASE 4: AGENT LABORATORY]
         direction TB
-        LabRunner --> PhD[📚 PhD Student\n(Claude Opus 4.5)]
-        PhD --> Postdoc1[📋 Postdoc Plan\n(Gemini 3 Pro)]
-        Postdoc1 --> Eng[🛠️ ML & SW Engineers\n(GPT-5 Codex + Claude)]
-        Eng --> Postdoc2[📈 Results Analysis\n(Gemini 3 Pro)]
-        Postdoc2 --> Prof[📝 Professor Writing\n(Claude Sonnet 4.5)]
-        Prof --> Review[✨ Review Board\n(Gemini 3 Pro)]
-        Review --> Final[📄 Research-Grade Proposal]
+        LabRunner --> PhD[PhD Student - Claude Opus 4.5]
+        PhD --> Postdoc1[Postdoc Plan - Gemini 3 Pro]
+        Postdoc1 --> Eng[ML and SW Engineers - GPT-5 Codex]
+        Eng --> Postdoc2[Results Analysis - Gemini 3 Pro]
+        Postdoc2 --> Prof[Professor Writing - Claude Sonnet 4.5]
+        Prof --> Review[Review Board - Gemini 3 Pro]
+        Review --> Final[Research-Grade Proposal]
     end
 ```
 

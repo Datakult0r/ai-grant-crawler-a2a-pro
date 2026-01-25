@@ -18,6 +18,9 @@ import documentsRouter from "./routes/documents.js";
 import teamRouter from "./routes/team.js";
 // Phase 1: Grant Discovery Routes & Jobs
 import adminSourcesRouter from "./routes/admin/sources.js";
+import notificationsRouter from "./routes/notifications.js";
+import settingsRouter from "./routes/settings.js";
+import analyticsRouter from "./routes/analytics.js";
 import { ScheduledDiscoveryJob } from "./jobs/scheduledDiscovery.js";
 import { startCronJobs } from "./jobs/cronScraper.js";
 
@@ -61,7 +64,10 @@ app.use("/api/tracker", trackerRouter);
 app.use("/api/predictor", predictorRouter);
 app.use("/api/documents", documentsRouter);
 app.use("/api/team", teamRouter);
-app.use("/api/admin/sources", adminSourcesRouter);// Phase 1: Sources Admin
+app.use("/api/admin/sources", adminSourcesRouter); // Phase 1: Sources Admin
+app.use("/api/notifications", notificationsRouter); // Phase 3: Email Notifications
+app.use("/api/settings", settingsRouter); // Phase 3: AI Model Configuration
+app.use("/api/analytics", analyticsRouter); // Phase 3: Analytics Dashboard
 
 // Start Cron Jobs
 startCronJobs(); // Existing scraper
