@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { FileText, Download, RefreshCw, CheckCircle2 } from 'lucide-svelte';
+  import { FileText, Download, RefreshCw, CheckCircle2, Loader2 } from 'lucide-svelte';
   import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '$lib/components/ui/card';
   import { Button } from '$lib/components/ui/button';
   import { Badge } from '$lib/components/ui/badge';
+  import { onMount } from 'svelte';
+  import { fetchDocuments, downloadDocument } from '$lib/api';
 
-  const documentTypes = [
+  let documentTypes = $state([
     {
       id: 'cv',
       title: 'Team CVs',
@@ -33,15 +35,48 @@
       status: 'generating',
       count: 2
     }
-  ];
+  ]);
 
-  const generatedDocs = [
-    { name: 'Team_CV_Ana_Silva.pdf', size: '245 KB', date: '2024-11-20' },
-    { name: 'Financial_Projection_2025.xlsx', size: '892 KB', date: '2024-11-20' },
-    { name: 'Technical_Architecture.pdf', size: '1.2 MB', date: '2024-11-19' },
-    { name: 'Budget_Breakdown.xlsx', size: '156 KB', date: '2024-11-19' },
-    { name: 'Team_CV_Joao_Santos.pdf', size: '238 KB', date: '2024-11-18' }
-  ];
+  let generatedDocs = $state([
+    { id: 0, name: 'Team_CV_Ana_Silva.pdf', size: '245 KB', date: '2024-11-20' },
+    { id: 0, name: 'Financial_Projection_2025.xlsx', size: '892 KB', date: '2024-11-20' },
+    { id: 0, name: 'Technical_Architecture.pdf', size: '1.2 MB', date: '2024-11-19' },
+    { id: 0, name: 'Budget_Breakdown.xlsx', size: '156 KB', date: '2024-11-19' },
+    { id: 0, name: 'Team_CV_Joao_Santos.pdf', size: '238 KB', date: '2024-11-18' }
+  ]);
+
+  let loading = $state(true);
+
+  onMount(async () => {
+    try {
+      const data = await fetchDocuments();
+      if (data.documentTypes) {
+        documentTypes = data.documentTypes;
+      }
+      if (data.recentDocuments && data.recentDocuments.length > 0) {
+        generatedDocs = data.recentDocuments;
+      }
+    } catch (e) {
+      console.error('Failed to fetch documents:', e);
+      // Keep demo data on error
+    } finally {
+      loading = false;
+    }
+  });
+
+  async function handleDownload(docId: number, docName: string) {
+    try {
+      const blob = await downloadDocument(docId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = docName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to download document:', e);
+    }
+  }
 </script>
 
 <div class="p-8 space-y-6">

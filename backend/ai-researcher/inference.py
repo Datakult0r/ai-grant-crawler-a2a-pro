@@ -3,6 +3,11 @@ import time, tiktoken
 from openai import OpenAI
 import os, anthropic, json
 import google.generativeai as genai
+import logging
+
+# Configure logging for cost tracking
+logging.basicConfig(level=logging.INFO)
+cost_logger = logging.getLogger('cost_tracker')
 
 TOKENS_IN = dict()
 TOKENS_OUT = dict()
@@ -19,6 +24,14 @@ OPENROUTER_MODELS = {
     "gemini-3-pro": "google/gemini-3-pro-preview",
     "deepseek-r1": "deepseek/deepseek-r1",
 }
+
+def log_agent_cost(agent_name: str, model: str, tokens_in: int, tokens_out: int):
+    """
+    Log cost information for an agent inference call.
+    Format: [COST] Agent: {agent_name}, Model: {model}, Tokens: {tokens}
+    """
+    total_tokens = tokens_in + tokens_out
+    cost_logger.info(f"[COST] Agent: {agent_name}, Model: {model}, Tokens: {total_tokens} (in: {tokens_in}, out: {tokens_out})")
 
 def curr_cost_est():
     costmap_in = {
@@ -80,7 +93,7 @@ def query_openrouter(model_str, prompt, system_prompt, temp=None):
     completion = client.chat.completions.create(**kwargs)
     return completion.choices[0].message.content
 
-def query_model(model_str, prompt, system_prompt, openai_api_key=None, gemini_api_key=None,  anthropic_api_key=None, tries=5, timeout=5.0, temp=None, print_cost=True, version="1.5"):
+def query_model(model_str, prompt, system_prompt, openai_api_key=None, gemini_api_key=None,  anthropic_api_key=None, tries=5, timeout=5.0, temp=None, print_cost=True, version="1.5", agent_name=None):
     preloaded_api = os.getenv('OPENAI_API_KEY')
     if openai_api_key is None and preloaded_api is not None:
         openai_api_key = preloaded_api
@@ -244,12 +257,22 @@ def query_model(model_str, prompt, system_prompt, openai_api_key=None, gemini_ap
                 elif model_str in ["deepseek-chat"]:
                     encoding = tiktoken.encoding_for_model("cl100k_base")
                 else:
-                    encoding = tiktoken.encoding_for_model(model_str)
+                    try:
+                        encoding = tiktoken.encoding_for_model(model_str)
+                    except KeyError:
+                        encoding = tiktoken.get_encoding("cl100k_base")
                 if model_str not in TOKENS_IN:
                     TOKENS_IN[model_str] = 0
                     TOKENS_OUT[model_str] = 0
-                TOKENS_IN[model_str] += len(encoding.encode(system_prompt + prompt))
-                TOKENS_OUT[model_str] += len(encoding.encode(answer))
+                tokens_in = len(encoding.encode(system_prompt + prompt))
+                tokens_out = len(encoding.encode(answer))
+                TOKENS_IN[model_str] += tokens_in
+                TOKENS_OUT[model_str] += tokens_out
+                
+                # Log cost for agent if agent_name is provided
+                if agent_name:
+                    log_agent_cost(agent_name, model_str, tokens_in, tokens_out)
+                
                 if print_cost:
                     print(f"Current experiment cost = ${curr_cost_est()}, ** Approximate values, may not reflect true cost")
             except Exception as e:

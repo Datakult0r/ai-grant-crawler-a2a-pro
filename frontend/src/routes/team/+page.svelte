@@ -1,26 +1,28 @@
 <script lang="ts">
-  import { Users, UserPlus, MessageSquare, Activity } from 'lucide-svelte';
+  import { Users, UserPlus, MessageSquare, Activity, Loader2 } from 'lucide-svelte';
   import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '$lib/components/ui/card';
   import { Button } from '$lib/components/ui/button';
   import { Badge } from '$lib/components/ui/badge';
   import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
+  import { onMount } from 'svelte';
+  import { fetchTeam } from '$lib/api';
 
-  const teamMembers = [
+  let teamMembers = $state([
     { name: 'Ana Silva', role: 'Principal Investigator', initials: 'AS', assigned: 5, color: 'bg-primary' },
     { name: 'João Santos', role: 'Medical Expert', initials: 'JS', assigned: 3, color: 'bg-secondary' },
     { name: 'Maria Costa', role: 'AI Researcher', initials: 'MC', assigned: 4, color: 'bg-accent' },
     { name: 'Pedro Alves', role: 'Project Manager', initials: 'PA', assigned: 6, color: 'bg-yellow-500' }
-  ];
+  ]);
 
-  const activities = [
+  let activities = $state([
     { user: 'Ana Silva', action: 'commented on', target: 'Horizon Europe - AI Innovation', time: '2 hours ago' },
     { user: 'João Santos', action: 'assigned', target: 'COMPETE 2030 to Maria Costa', time: '4 hours ago' },
     { user: 'Maria Costa', action: 'updated', target: 'Technical Approach section', time: '6 hours ago' },
     { user: 'Pedro Alves', action: 'completed', target: 'Budget Breakdown', time: '1 day ago' },
     { user: 'Ana Silva', action: 'created', target: 'EIC Accelerator application', time: '2 days ago' }
-  ];
+  ]);
 
-  const comments = [
+  let comments = $state([
     { 
       user: 'João Santos', 
       initials: 'JS', 
@@ -45,7 +47,29 @@
       text: 'Great work on the market analysis section! The competitive landscape is very comprehensive.',
       time: '1 day ago'
     }
-  ];
+  ]);
+
+  let loading = $state(true);
+
+  onMount(async () => {
+    try {
+      const data = await fetchTeam();
+      if (data.teamMembers) {
+        teamMembers = data.teamMembers;
+      }
+      if (data.activities && data.activities.length > 0) {
+        activities = data.activities;
+      }
+      if (data.comments && data.comments.length > 0) {
+        comments = data.comments;
+      }
+    } catch (e) {
+      console.error('Failed to fetch team data:', e);
+      // Keep demo data on error
+    } finally {
+      loading = false;
+    }
+  });
 </script>
 
 <div class="p-8 space-y-6">

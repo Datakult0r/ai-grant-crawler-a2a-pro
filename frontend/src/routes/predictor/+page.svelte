@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { TrendingUp, Target, Users, DollarSign, Calendar } from 'lucide-svelte';
+  import { TrendingUp, Target, Users, DollarSign, Calendar, Loader2 } from 'lucide-svelte';
   import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '$lib/components/ui/card';
   import { Progress } from '$lib/components/ui/progress';
   import { Badge } from '$lib/components/ui/badge';
+  import { onMount } from 'svelte';
+  import { fetchPredictor } from '$lib/api';
 
-  const prediction = {
+  let prediction = $state({
     overallScore: 84,
     factors: [
       { name: 'Technical Excellence', score: 92, weight: 30 },
@@ -19,9 +21,9 @@
       'Include more specific KPIs and success metrics',
       'Enhance dissemination plan with concrete publication targets'
     ]
-  };
+  });
 
-  const historicalData = [
+  let historicalData = $state([
     { month: 'Jan', rate: 65 },
     { month: 'Feb', rate: 68 },
     { month: 'Mar', rate: 72 },
@@ -30,7 +32,26 @@
     { month: 'Jun', rate: 78 },
     { month: 'Jul', rate: 82 },
     { month: 'Aug', rate: 84 }
-  ];
+  ]);
+
+  let loading = $state(true);
+
+  onMount(async () => {
+    try {
+      const data = await fetchPredictor();
+      if (data.prediction) {
+        prediction = data.prediction;
+      }
+      if (data.historicalData) {
+        historicalData = data.historicalData;
+      }
+    } catch (e) {
+      console.error('Failed to fetch predictor data:', e);
+      // Keep demo data on error
+    } finally {
+      loading = false;
+    }
+  });
 </script>
 
 <div class="p-8 space-y-6">

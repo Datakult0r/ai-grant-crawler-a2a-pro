@@ -12,6 +12,10 @@
     Zap,
     MessageSquare,
     ArrowLeft,
+    Loader2,
+    RefreshCw,
+    Wifi,
+    WifiOff,
   } from "lucide-svelte";
   import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
@@ -20,16 +24,30 @@
   import ResearchVisualization from "$lib/components/ResearchVisualization.svelte";
   import ResearchProgress from "$lib/components/ResearchProgress.svelte";
 
+  // SSE Connection Recovery Configuration
+  const SSE_RECONNECT_DELAY_MS = 3000;
+  const MAX_RECONNECT_ATTEMPTS = 5;
+
   interface Grant {
     id: number;
     name: string;
   }
+
+  interface PhaseInfo {
+    id: number;
+    name: string;
+    description: string;
+  }
+
   let grantId = $page.params.grantId;
   let grant = $state<Grant | null>(null);
   let isRunning = $state(false);
   let showAgentLab = $state(false);
   let progress = $state(0);
   let currentPhase = $state(0);
+  let totalPhases = $state(7);
+  let phaseName = $state("");
+  let phaseDescription = $state("");
   let activities = $state<
     Array<{ text: string; agent: string; timestamp: string; status: string }>
   >([]);
@@ -38,6 +56,12 @@
   let proposalIdState = $state<string | null>(null);
   let error = $state<string | null>(null);
   let eventSource: EventSource | null = null;
+  
+  // Connection status tracking
+  let connectionStatus = $state<'connected' | 'disconnected' | 'reconnecting'>('disconnected');
+  let reconnectAttempts = $state(0);
+  let lastHeartbeat = $state<string | null>(null);
+  let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Mock company profile
   const companyProfile = {
@@ -116,8 +140,171 @@
   });
 
   onDestroy(() => {
-    if (eventSource) eventSource.close();
+    cleanupConnection();
   });
+
+  function cleanupConnection() {
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = null;
+    }
+    connectionStatus = 'disconnected';
+  }
+
+  function attemptReconnect() {
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      error = `Connection lost after ${MAX_RECONNECT_ATTEMPTS} reconnection attempts. Please try again.`;
+      isRunning = false;
+      connectionStatus = 'disconnected';
+      return;
+    }
+
+    connectionStatus = 'reconnecting';
+    reconnectAttempts++;
+    console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+
+    reconnectTimeout = setTimeout(() => {
+      if (proposalIdState) {
+        connectToSSE(proposalIdState);
+      }
+    }, SSE_RECONNECT_DELAY_MS);
+  }
+
+  function connectToSSE(proposalId: string) {
+    // Close existing connection if any
+    if (eventSource) {
+      eventSource.close();
+    }
+
+    eventSource = new EventSource(`/api/proposal/${proposalId}/stream`);
+    
+    eventSource.onopen = () => {
+      connectionStatus = 'connected';
+      reconnectAttempts = 0; // Reset on successful connection
+      console.log('SSE connection established');
+    };
+
+    eventSource.onmessage = (event) => {
+      // Keep alive - generic message handler
+    };
+
+    // Handle heartbeat events
+    eventSource.addEventListener("heartbeat", (event: any) => {
+      const data = JSON.parse(event.data);
+      lastHeartbeat = data.timestamp;
+      connectionStatus = 'connected';
+    });
+
+    // Handle phases info (sent at start)
+    eventSource.addEventListener("phases_info", (event: any) => {
+      const data = JSON.parse(event.data);
+      totalPhases = data.totalPhases || 7;
+    });
+
+    // Handle phase updates with enhanced info
+    eventSource.addEventListener("phase", (event: any) => {
+      const data = JSON.parse(event.data);
+      currentPhase = data.phase;
+      phaseName = data.phaseName || "";
+      phaseDescription = data.phaseDescription || "";
+      totalPhases = data.totalPhases || 7;
+      progress = data.progress || Math.round((currentPhase / totalPhases) * 100);
+      animateResearchersByPhase(currentPhase);
+    });
+
+    eventSource.addEventListener("log", (event: any) => {
+      const data = JSON.parse(event.data);
+      activities = [
+        ...activities,
+        {
+          text: data.message,
+          agent: data.agent || "System",
+          timestamp: data.timestamp || new Date().toISOString(),
+          status: data.status || "Processing",
+        },
+      ];
+
+      // Simulate speech bubble
+      if (data.agent && data.agent !== "System") {
+        const researcherIndex = researchers.findIndex(
+          (r) => r.name.includes(data.agent) || data.agent.includes(r.name)
+        );
+        if (researcherIndex >= 0) {
+          activeSpeaker = researcherIndex;
+          speechBubble =
+            data.message.substring(0, 50) +
+            (data.message.length > 50 ? "..." : "");
+          setTimeout(() => {
+            activeSpeaker = null;
+          }, 3000);
+        }
+      }
+    });
+
+    eventSource.addEventListener("progress", (event: any) => {
+      const data = JSON.parse(event.data);
+      progress = data.percentage;
+    });
+
+    eventSource.addEventListener("complete", (event: any) => {
+      const data = JSON.parse(event.data);
+      proposalResult = data.result;
+      isRunning = false;
+      showOutput = true;
+      connectionStatus = 'disconnected';
+      cleanupConnection();
+    });
+
+    eventSource.addEventListener("status", (event: any) => {
+      const data = JSON.parse(event.data);
+      if (data.status === "completed") {
+        isRunning = false;
+        showOutput = true;
+        connectionStatus = 'disconnected';
+      } else if (data.status === "failed") {
+        error = "Research process failed";
+        isRunning = false;
+        connectionStatus = 'disconnected';
+      }
+      cleanupConnection();
+    });
+
+    // Handle fallback to fast track
+    eventSource.addEventListener("fallback", (event: any) => {
+      const data = JSON.parse(event.data);
+      error = data.message;
+      isRunning = false;
+      connectionStatus = 'disconnected';
+      cleanupConnection();
+    });
+
+    // Handle timeout
+    eventSource.addEventListener("timeout", (event: any) => {
+      const data = JSON.parse(event.data);
+      error = data.message;
+      isRunning = false;
+      connectionStatus = 'disconnected';
+      cleanupConnection();
+    });
+
+    eventSource.onerror = (event: any) => {
+      console.error("SSE Error:", event);
+      connectionStatus = 'disconnected';
+      
+      // Only attempt reconnect if still running
+      if (isRunning && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        attemptReconnect();
+      } else if (isRunning) {
+        error = "Connection lost. Please try again.";
+        isRunning = false;
+        cleanupConnection();
+      }
+    };
+  }
 
   async function startThinktank() {
     if (!grant) return;
@@ -125,76 +312,22 @@
     isRunning = true;
     progress = 0;
     currentPhase = 0;
+    phaseName = "";
+    phaseDescription = "";
     activities = [];
     whiteboardIdeas = [];
     showOutput = false;
+    error = null;
+    reconnectAttempts = 0;
+    connectionStatus = 'disconnected';
 
     try {
       // 1. Trigger generation
       const res = await generateProposal(grant.id, companyProfile, "research");
       proposalIdState = res.proposalId;
 
-      // 2. Connect to SSE
-      eventSource = new EventSource(`/api/proposal/${res.proposalId}/stream`);
-
-      eventSource.onmessage = (event) => {
-        // Keep alive
-      };
-
-      eventSource.addEventListener("log", (event: any) => {
-        const data = JSON.parse(event.data);
-        activities = [
-          ...activities,
-          {
-            text: data.message,
-            agent: data.agent,
-            timestamp: data.timestamp,
-            status: data.status,
-          },
-        ];
-
-        // Simulate speech bubble
-        if (data.agent !== "System") {
-          const researcherIndex = researchers.findIndex(
-            (r) => r.name.includes(data.agent) || data.agent.includes(r.name)
-          );
-          if (researcherIndex >= 0) {
-            activeSpeaker = researcherIndex;
-            speechBubble =
-              data.message.substring(0, 50) +
-              (data.message.length > 50 ? "..." : "");
-            setTimeout(() => {
-              activeSpeaker = null;
-            }, 3000);
-          }
-        }
-      });
-
-      eventSource.addEventListener("phase", (event: any) => {
-        const data = JSON.parse(event.data);
-        currentPhase = data.phase;
-        animateResearchersByPhase(currentPhase);
-      });
-
-      eventSource.addEventListener("progress", (event: any) => {
-        const data = JSON.parse(event.data);
-        progress = data.percentage;
-      });
-
-      eventSource.addEventListener("complete", (event: any) => {
-        const data = JSON.parse(event.data);
-        proposalResult = data.result;
-        isRunning = false;
-        showOutput = true;
-        if (eventSource) eventSource.close();
-      });
-
-      eventSource.addEventListener("error", (event: any) => {
-        console.error("SSE Error:", event);
-        error = "Research process failed";
-        isRunning = false;
-        if (eventSource) eventSource.close();
-      });
+      // 2. Connect to SSE with recovery support
+      connectToSSE(res.proposalId);
     } catch (e) {
       if (e instanceof Error) {
         error = e.message;
@@ -202,6 +335,7 @@
         error = String(e);
       }
       isRunning = false;
+      connectionStatus = 'disconnected';
     }
   }
 
@@ -333,6 +467,29 @@
             </div>
           {:else}
             <div class="space-y-4">
+              <!-- Connection Status -->
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium">Connection</span>
+                <div class="flex items-center gap-2">
+                  {#if connectionStatus === 'connected'}
+                    <Wifi class="w-4 h-4 text-green-400" />
+                    <Badge variant="outline" class="border-green-500/50 text-green-400">
+                      Connected
+                    </Badge>
+                  {:else if connectionStatus === 'reconnecting'}
+                    <RefreshCw class="w-4 h-4 text-yellow-400 animate-spin" />
+                    <Badge variant="outline" class="border-yellow-500/50 text-yellow-400">
+                      Reconnecting ({reconnectAttempts}/{MAX_RECONNECT_ATTEMPTS})
+                    </Badge>
+                  {:else}
+                    <WifiOff class="w-4 h-4 text-muted-foreground" />
+                    <Badge variant="outline" class="border-muted-foreground/50 text-muted-foreground">
+                      Disconnected
+                    </Badge>
+                  {/if}
+                </div>
+              </div>
+
               <div class="flex items-center justify-between">
                 <span class="text-sm font-medium">Status</span>
                 <Badge
@@ -343,20 +500,47 @@
                 </Badge>
               </div>
 
+              <!-- Progress Bar -->
               <div class="space-y-2">
-                <h3 class="text-sm font-semibold">Research Phases</h3>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-muted-foreground">Progress</span>
+                  <span class="font-medium">{progress}%</span>
+                </div>
+                <div class="h-2 bg-muted/30 rounded-full overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500"
+                    style="width: {progress}%"
+                  ></div>
+                </div>
+                {#if phaseName}
+                  <p class="text-xs text-muted-foreground">{phaseDescription}</p>
+                {/if}
+              </div>
+
+              <div class="space-y-2">
+                <h3 class="text-sm font-semibold">Research Phases ({currentPhase + 1}/{totalPhases})</h3>
                 {#each phases as phase, i}
                   <div class="flex items-center gap-2">
                     <div
                       class="w-8 h-8 rounded-lg flex items-center justify-center
-                                        {i <= currentPhase
-                        ? 'bg-primary/20 ' + phase.color
+                                        {i < currentPhase
+                        ? 'bg-green-500/20 text-green-400'
+                        : i === currentPhase
+                        ? 'bg-primary/20 ' + phase.color + ' animate-pulse'
                         : 'bg-muted/30 text-muted-foreground'}"
                     >
-                      <phase.icon class="w-4 h-4" />
+                      {#if i < currentPhase}
+                        <CheckCircle class="w-4 h-4" />
+                      {:else if i === currentPhase && isRunning}
+                        <Loader2 class="w-4 h-4 animate-spin" />
+                      {:else}
+                        <phase.icon class="w-4 h-4" />
+                      {/if}
                     </div>
                     <span
-                      class="text-xs {i <= currentPhase
+                      class="text-xs {i < currentPhase
+                        ? 'text-green-400'
+                        : i === currentPhase
                         ? phase.color
                         : 'text-muted-foreground'}">{phase.name}</span
                     >
