@@ -11,6 +11,7 @@ import thinktankRouter from "./routes/thinktank.js";
 import proposalRouter from "./routes/proposal.js";
 import researchRouter from "./routes/research.js";
 import julesRouter from "./routes/jules.js";
+import alertsRouter from "./routes/alerts.js";
 // Phase 1: Grant Discovery Routes & Jobs
 import adminSourcesRouter from "./routes/admin/sources.js";
 import { ScheduledDiscoveryJob } from "./jobs/scheduledDiscovery.js";
@@ -51,6 +52,7 @@ app.use("/api/thinktank", thinktankRouter);
 app.use("/api/proposal", proposalRouter);
 app.use("/api/research", researchRouter); // Phase 2: Research Stream
 app.use("/api/jules", julesRouter);
+app.use("/api/alerts", alertsRouter);
 app.use("/api/admin/sources", adminSourcesRouter); // Phase 1: Sources Admin
 
 // Start Cron Jobs
