@@ -18,6 +18,7 @@
   } from 'lucide-svelte';
   import { auth, isAuthenticated, currentUser } from '$lib/stores/auth';
   import { Button } from '$lib/components/ui/button';
+  import Toast from '$lib/components/Toast.svelte';
 
   let { children } = $props();
 
@@ -107,5 +108,8 @@
     <main class="flex-1 overflow-auto">
       {@render children()}
     </main>
+    
+    <!-- Toast Notifications -->
+    <Toast />
   </div>
 {/if}

@@ -1,47 +1,52 @@
 <script lang="ts">
-  import { Bell, Calendar, AlertCircle, CheckCircle2 } from 'lucide-svelte';
+  import { Bell, Calendar, AlertCircle, CheckCircle2, Loader2 } from 'lucide-svelte';
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
   import { Badge } from '$lib/components/ui/badge';
   import { Button } from '$lib/components/ui/button';
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { fetchAlerts, type Alert, type AlertsResponse } from '$lib/api';
 
-  const alerts = [
-    {
-      id: 1,
-      type: 'urgent',
-      title: 'COMPETE 2030 - Deadline in 7 days',
-      description: 'Digital Transformation grant application closes on Nov 27',
-      daysLeft: 7,
-      grant: 'COMPETE 2030',
-      amount: '€800K'
-    },
-    {
-      id: 2,
-      type: 'warning',
-      title: 'Horizon Europe - Deadline in 14 days',
-      description: 'AI Innovation program final submission date approaching',
-      daysLeft: 14,
-      grant: 'Horizon Europe',
-      amount: '€2.5M'
-    },
-    {
-      id: 3,
-      type: 'info',
-      title: 'EIC Accelerator - Deadline in 30 days',
-      description: 'Deep Tech funding opportunity - prepare your application',
-      daysLeft: 30,
-      grant: 'EIC Accelerator',
-      amount: '€2M'
-    },
-    {
-      id: 4,
-      type: 'success',
-      title: 'ANI Innovation - Application Submitted',
-      description: 'Your application was successfully submitted on Nov 10',
-      daysLeft: null,
-      grant: 'ANI',
-      amount: '€500K'
+  // State
+  let loading = $state(true);
+  let error = $state<string | null>(null);
+  let alertsData = $state<AlertsResponse | null>(null);
+
+  // Computed alerts list (all alerts combined and sorted)
+  let alerts = $derived<Alert[]>(() => {
+    if (!alertsData) return [];
+    return [
+      ...alertsData.urgent,
+      ...alertsData.warning,
+      ...alertsData.info,
+      ...alertsData.completed
+    ];
+  });
+
+  // Stats from API
+  let stats = $derived({
+    urgent: alertsData?.stats.urgent ?? 0,
+    warning: alertsData?.stats.warning ?? 0,
+    info: alertsData?.stats.info ?? 0,
+    completed: alertsData?.stats.completed ?? 0
+  });
+
+  onMount(async () => {
+    try {
+      alertsData = await fetchAlerts();
+    } catch (e) {
+      console.error('Failed to fetch alerts:', e);
+      error = e instanceof Error ? e.message : String(e);
+    } finally {
+      loading = false;
     }
-  ];
+  });
+
+  function handleViewDetails(alert: Alert) {
+    if (alert.grantId) {
+      goto(`/thinktank/${alert.grantId}`);
+    }
+  }
 
   function getAlertColor(type: string) {
     switch (type) {
@@ -85,60 +90,89 @@
     </p>
   </div>
 
-  <!-- Alert Stats -->
-  <div class="grid grid-cols-4 gap-4">
+  <!-- Loading State -->
+  {#if loading}
+    <Card class="glass-card border-primary/30">
+      <CardContent class="p-8 flex flex-col items-center justify-center gap-4">
+        <Loader2 class="w-8 h-8 text-primary animate-spin" />
+        <p class="text-muted-foreground">Loading alerts...</p>
+      </CardContent>
+    </Card>
+  {:else if error}
     <Card class="glass-card border-destructive/30">
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-muted-foreground">Urgent (7 days)</p>
-            <p class="text-3xl font-bold text-destructive">1</p>
-          </div>
-          <AlertCircle class={getAlertIconColor('urgent')} />
-        </div>
+      <CardContent class="p-8 flex flex-col items-center justify-center gap-4">
+        <AlertCircle class="w-8 h-8 text-destructive" />
+        <p class="text-destructive font-medium">Failed to load alerts</p>
+        <p class="text-muted-foreground text-sm">{error}</p>
+        <Button variant="outline" onclick={() => window.location.reload()}>
+          Try Again
+        </Button>
       </CardContent>
     </Card>
-
-    <Card class="glass-card border-yellow-500/30">
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-muted-foreground">Warning (14 days)</p>
-            <p class="text-3xl font-bold text-yellow-500">1</p>
+  {:else}
+    <!-- Alert Stats -->
+    <div class="grid grid-cols-4 gap-4">
+      <Card class="glass-card border-destructive/30">
+        <CardContent class="p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-muted-foreground">Urgent (7 days)</p>
+              <p class="text-3xl font-bold text-destructive">{stats.urgent}</p>
+            </div>
+            <AlertCircle class={getAlertIconColor('urgent')} />
           </div>
-          <Calendar class={getAlertIconColor('warning')} />
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
 
-    <Card class="glass-card border-secondary/30">
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-muted-foreground">Info (30 days)</p>
-            <p class="text-3xl font-bold text-secondary">1</p>
+      <Card class="glass-card border-yellow-500/30">
+        <CardContent class="p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-muted-foreground">Warning (14 days)</p>
+              <p class="text-3xl font-bold text-yellow-500">{stats.warning}</p>
+            </div>
+            <Calendar class={getAlertIconColor('warning')} />
           </div>
-          <Bell class={getAlertIconColor('info')} />
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
 
-    <Card class="glass-card border-accent/30">
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-muted-foreground">Completed</p>
-            <p class="text-3xl font-bold text-accent">1</p>
+      <Card class="glass-card border-secondary/30">
+        <CardContent class="p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-muted-foreground">Info (30 days)</p>
+              <p class="text-3xl font-bold text-secondary">{stats.info}</p>
+            </div>
+            <Bell class={getAlertIconColor('info')} />
           </div>
-          <CheckCircle2 class={getAlertIconColor('success')} />
-        </div>
-      </CardContent>
-    </Card>
-  </div>
+        </CardContent>
+      </Card>
 
-  <!-- Alerts List -->
-  <div class="space-y-4">
-    {#each alerts as alert}
+      <Card class="glass-card border-accent/30">
+        <CardContent class="p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-muted-foreground">Completed</p>
+              <p class="text-3xl font-bold text-accent">{stats.completed}</p>
+            </div>
+            <CheckCircle2 class={getAlertIconColor('success')} />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Alerts List -->
+    {#if alerts.length === 0}
+      <Card class="glass-card border-secondary/30">
+        <CardContent class="p-8 flex flex-col items-center justify-center gap-4">
+          <Bell class="w-8 h-8 text-secondary" />
+          <p class="text-muted-foreground">No alerts at this time</p>
+          <p class="text-sm text-muted-foreground">Alerts will appear when grants have upcoming deadlines</p>
+        </CardContent>
+      </Card>
+    {:else}
+      <div class="space-y-4">
+        {#each alerts as alert}
       <Card class="glass-card {getAlertColor(alert.type)} hover:border-primary/50 transition-all duration-300">
         <CardContent class="p-6">
           <div class="flex items-start gap-6">
@@ -188,7 +222,7 @@
                   <span class="text-sm font-semibold text-foreground">{alert.amount}</span>
                 </div>
                 <div class="flex-1"></div>
-                <Button size="sm" variant="outline" class="border-primary/30 hover:bg-primary/10">
+                <Button size="sm" variant="outline" class="border-primary/30 hover:bg-primary/10" onclick={() => handleViewDetails(alert)}>
                   View Details
                 </Button>
               </div>
@@ -196,6 +230,8 @@
           </div>
         </CardContent>
       </Card>
-    {/each}
-  </div>
+        {/each}
+      </div>
+    {/if}
+  {/if}
 </div>
