@@ -9,13 +9,52 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
+// SSE Hardening Configuration
+const SSE_CONFIG = {
+  TIMEOUT_MS: 60000, // 60 seconds timeout
+  HEARTBEAT_INTERVAL_MS: 10000, // 10 seconds heartbeat
+  MAX_RETRIES: 3,
+  RETRY_DELAY_MS: 2000,
+};
+
+// Research phases for tracking
+const RESEARCH_PHASES = [
+  { id: 0, name: "Initial Analysis", description: "Analyzing grant requirements" },
+  { id: 1, name: "Brainstorming", description: "Generating initial ideas" },
+  { id: 2, name: "Deep Research", description: "Conducting in-depth research" },
+  { id: 3, name: "Synthesis", description: "Synthesizing findings" },
+  { id: 4, name: "Writing", description: "Drafting proposal content" },
+  { id: 5, name: "Peer Review", description: "Reviewing and refining" },
+  { id: 6, name: "Finalization", description: "Final polish and formatting" },
+];
+
 export class ResearchService {
+  /**
+   * Check if OpenRouter API key is available for deep research
+   */
+  static hasOpenRouterKey() {
+    return !!process.env.OPENROUTER_API_KEY;
+  }
+
   /**
    * Start a deep research session for a grant.
    * @param {string} grantId - UUID or ID of the grant
    * @param {Object} res - Express response object for SSE
    */
   static async startResearch(grantId, res) {
+    // Check for OpenRouter key - graceful degradation to Fast Track
+    if (!this.hasOpenRouterKey()) {
+      console.log("OPENROUTER_API_KEY not found, suggesting Fast Track mode");
+      res.write(
+        `data: ${JSON.stringify({
+          type: "fallback",
+          message: "Deep research unavailable (OPENROUTER_API_KEY missing). Switching to Fast Track mode.",
+          fallbackMode: "fast_track",
+        })}\n\n`
+      );
+      res.end();
+      return;
+    }
     // 1. Fetch grant data
     const { data: grant, error } = await supabase
       .from("grants")
@@ -84,10 +123,56 @@ export class ResearchService {
       `Spawned Agent Lab for Grant ${grantId} (PID: ${pythonProcess.pid})`
     );
 
-    // 5. Pipe output to SSE
+    // Send initial phases info to frontend
+    res.write(
+      `data: ${JSON.stringify({
+        type: "phases_info",
+        phases: RESEARCH_PHASES,
+        totalPhases: RESEARCH_PHASES.length,
+      })}\n\n`
+    );
+
+    // 5. Setup heartbeat interval to keep connection alive
+    let currentPhase = 0;
+    let lastActivityTime = Date.now();
+    let isProcessComplete = false;
+
+    const heartbeatInterval = setInterval(() => {
+      if (isProcessComplete) {
+        clearInterval(heartbeatInterval);
+        return;
+      }
+
+      // Send heartbeat
+      res.write(
+        `data: ${JSON.stringify({
+          type: "heartbeat",
+          timestamp: new Date().toISOString(),
+          currentPhase,
+          phaseName: RESEARCH_PHASES[currentPhase]?.name || "Unknown",
+        })}\n\n`
+      );
+
+      // Check for timeout
+      const timeSinceLastActivity = Date.now() - lastActivityTime;
+      if (timeSinceLastActivity > SSE_CONFIG.TIMEOUT_MS) {
+        console.error(`Research timeout for grant ${grantId} after ${SSE_CONFIG.TIMEOUT_MS}ms`);
+        res.write(
+          `data: ${JSON.stringify({
+            type: "timeout",
+            message: "Research process timed out. Please try again.",
+          })}\n\n`
+        );
+        pythonProcess.kill();
+        clearInterval(heartbeatInterval);
+      }
+    }, SSE_CONFIG.HEARTBEAT_INTERVAL_MS);
+
+    // 6. Pipe output to SSE
     let buffer = "";
 
     pythonProcess.stdout.on("data", (data) => {
+      lastActivityTime = Date.now(); // Reset timeout on activity
       buffer += data.toString();
       const lines = buffer.split("\n");
 
@@ -102,16 +187,32 @@ export class ResearchService {
           // The bridge script outputs structured JSON events
           const parsed = JSON.parse(trimmed);
 
-          // Forward the event directly to SSE
-          res.write(`data: ${JSON.stringify(parsed)}\n\n`);
+          // Track phase changes
+          if (parsed.type === "stage_started" || parsed.type === "phase") {
+            const phaseNum = parsed.stage ?? parsed.phase ?? currentPhase;
+            currentPhase = phaseNum;
+            
+            // Enhanced phase event with phase details
+            res.write(
+              `data: ${JSON.stringify({
+                type: "phase",
+                phase: currentPhase,
+                phaseName: RESEARCH_PHASES[currentPhase]?.name || "Unknown",
+                phaseDescription: RESEARCH_PHASES[currentPhase]?.description || "",
+                totalPhases: RESEARCH_PHASES.length,
+                progress: Math.round((currentPhase / RESEARCH_PHASES.length) * 100),
+              })}\n\n`
+            );
 
-          // Update database on stage changes
-          if (parsed.type === "stage_started") {
+            // Update database on stage changes
             supabase
               .from("grant_research")
-              .update({ current_stage: parsed.stage })
+              .update({ current_stage: currentPhase })
               .eq("id", researchRecord.id)
               .then(() => {});
+          } else {
+            // Forward other events directly to SSE
+            res.write(`data: ${JSON.stringify(parsed)}\n\n`);
           }
         } catch (e) {
           // Not JSON, wrap as text log
@@ -123,6 +224,7 @@ export class ResearchService {
     });
 
     pythonProcess.stderr.on("data", (data) => {
+      lastActivityTime = Date.now(); // Reset timeout on activity
       console.error(`Agent Lab Err: ${data}`);
       res.write(
         `data: ${JSON.stringify({
@@ -134,6 +236,9 @@ export class ResearchService {
     });
 
     pythonProcess.on("close", async (code) => {
+      isProcessComplete = true;
+      clearInterval(heartbeatInterval);
+      
       console.log(`Agent Lab exited with code ${code}`);
       const status = code === 0 ? "completed" : "failed";
 
@@ -144,9 +249,24 @@ export class ResearchService {
         .eq("id", researchRecord.id);
 
       res.write(
-        `data: ${JSON.stringify({ type: "status", status: status })}\n\n`
+        `data: ${JSON.stringify({ 
+          type: "status", 
+          status: status,
+          finalPhase: currentPhase,
+          totalPhases: RESEARCH_PHASES.length,
+        })}\n\n`
       );
       res.end();
+    });
+
+    // Handle client disconnect
+    res.on("close", () => {
+      isProcessComplete = true;
+      clearInterval(heartbeatInterval);
+      if (pythonProcess && !pythonProcess.killed) {
+        console.log(`Client disconnected, killing Agent Lab process ${pythonProcess.pid}`);
+        pythonProcess.kill();
+      }
     });
   }
 }
