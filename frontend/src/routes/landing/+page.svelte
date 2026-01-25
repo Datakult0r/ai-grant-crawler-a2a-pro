@@ -1,10 +1,11 @@
 <script>
   import { onMount } from 'svelte';
-  import { Search, Zap, Brain, FileText, Clock, TrendingUp, ChevronRight, Star, Users, Globe, Shield, ArrowRight, Check, Play } from 'lucide-svelte';
+  import { Search, Zap, Brain, FileText, Clock, TrendingUp, ChevronRight, Star, Users, Globe, Shield, ArrowRight, Check, Play, Menu, X } from 'lucide-svelte';
 
   let isVisible = $state(false);
   let activeFeature = $state(0);
   let showDemo = $state(false);
+  let mobileMenuOpen = $state(false);
 
   const features = [
     {
@@ -40,26 +41,29 @@
     { value: '95%', label: 'Relevance Accuracy', icon: TrendingUp }
   ];
 
-  const testimonials = [
-    {
-      quote: "The multi-agent research pipeline produced a proposal that was more comprehensive than anything we could have written in weeks.",
-      author: "Dr. Sarah Chen",
-      role: "Research Director, MIT",
-      avatar: "SC"
-    },
-    {
-      quote: "We secured 3 grants in our first quarter using AI Grant Crawler. The ROI is incredible.",
-      author: "Prof. Marcus Weber",
-      role: "Principal Investigator, ETH Zurich",
-      avatar: "MW"
-    },
-    {
-      quote: "The deadline alerts and relevance scoring saved us countless hours of manual searching.",
-      author: "Dr. Elena Rodriguez",
-      role: "Grant Manager, Stanford",
-      avatar: "ER"
-    }
-  ];
+    const testimonials = [
+      {
+        quote: "The multi-agent research pipeline produced a proposal that was more comprehensive than anything we could have written in weeks.",
+        author: "Research Director",
+        role: "Leading Research Institution",
+        avatar: "RD",
+        isExample: true
+      },
+      {
+        quote: "We secured multiple grants in our first quarter using AI Grant Crawler. The ROI is incredible.",
+        author: "Principal Investigator",
+        role: "European University",
+        avatar: "PI",
+        isExample: true
+      },
+      {
+        quote: "The deadline alerts and relevance scoring saved us countless hours of manual searching.",
+        author: "Grant Manager",
+        role: "Research University",
+        avatar: "GM",
+        isExample: true
+      }
+    ];
 
   const pricingPlans = [
     {
@@ -128,31 +132,61 @@
 </svelte:head>
 
 <div class="min-h-screen bg-slate-950 text-white overflow-hidden">
-  <!-- Navigation -->
-  <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
-          <Brain class="w-6 h-6 text-white" />
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+            <Brain class="w-6 h-6 text-white" />
+          </div>
+          <span class="text-xl font-bold">AI Grant Crawler</span>
         </div>
-        <span class="text-xl font-bold">AI Grant Crawler</span>
-      </div>
       
-      <div class="hidden md:flex items-center gap-8">
-        <a href="#features" class="text-slate-400 hover:text-white transition-colors">Features</a>
-        <a href="#how-it-works" class="text-slate-400 hover:text-white transition-colors">How It Works</a>
-        <a href="#pricing" class="text-slate-400 hover:text-white transition-colors">Pricing</a>
-        <a href="#testimonials" class="text-slate-400 hover:text-white transition-colors">Testimonials</a>
-      </div>
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#features" class="text-slate-400 hover:text-white transition-colors">Features</a>
+          <a href="#how-it-works" class="text-slate-400 hover:text-white transition-colors">How It Works</a>
+          <a href="#pricing" class="text-slate-400 hover:text-white transition-colors">Pricing</a>
+          <a href="#testimonials" class="text-slate-400 hover:text-white transition-colors">Testimonials</a>
+        </div>
       
-      <div class="flex items-center gap-4">
-        <a href="/login" class="text-slate-400 hover:text-white transition-colors">Sign In</a>
-        <a href="/signup" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg font-semibold hover:opacity-90 transition-opacity">
-          Get Started
-        </a>
+        <div class="hidden md:flex items-center gap-4">
+          <a href="/login" class="text-slate-400 hover:text-white transition-colors">Sign In</a>
+          <a href="/signup" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+            Get Started
+          </a>
+        </div>
+      
+        <!-- Mobile Menu Button -->
+        <button 
+          onclick={() => mobileMenuOpen = !mobileMenuOpen}
+          class="md:hidden p-2 text-slate-400 hover:text-white transition-colors"
+          aria-label="Toggle mobile menu"
+        >
+          {#if mobileMenuOpen}
+            <X class="w-6 h-6" />
+          {:else}
+            <Menu class="w-6 h-6" />
+          {/if}
+        </button>
       </div>
-    </div>
-  </nav>
+    
+      <!-- Mobile Menu Drawer -->
+      {#if mobileMenuOpen}
+        <div class="md:hidden bg-slate-900 border-t border-slate-800 animate-slide-down">
+          <div class="px-6 py-4 space-y-4">
+            <a href="#features" onclick={() => mobileMenuOpen = false} class="block text-slate-400 hover:text-white transition-colors py-2">Features</a>
+            <a href="#how-it-works" onclick={() => mobileMenuOpen = false} class="block text-slate-400 hover:text-white transition-colors py-2">How It Works</a>
+            <a href="#pricing" onclick={() => mobileMenuOpen = false} class="block text-slate-400 hover:text-white transition-colors py-2">Pricing</a>
+            <a href="#testimonials" onclick={() => mobileMenuOpen = false} class="block text-slate-400 hover:text-white transition-colors py-2">Testimonials</a>
+            <hr class="border-slate-800" />
+            <a href="/login" onclick={() => mobileMenuOpen = false} class="block text-slate-400 hover:text-white transition-colors py-2">Sign In</a>
+            <a href="/signup" onclick={() => mobileMenuOpen = false} class="block w-full text-center px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+              Get Started
+            </a>
+          </div>
+        </div>
+      {/if}
+    </nav>
 
   <!-- Hero Section -->
   <section class="relative pt-32 pb-20 px-6">
@@ -342,27 +376,32 @@
         </p>
       </div>
       
-      <div class="grid md:grid-cols-3 gap-8">
-        {#each testimonials as testimonial}
-          <div class="p-8 bg-slate-800/50 border border-slate-700 rounded-2xl">
-            <div class="flex gap-1 mb-4">
-              {#each Array(5) as _}
-                <Star class="w-5 h-5 text-yellow-400 fill-yellow-400" />
+            <div class="grid md:grid-cols-3 gap-8">
+              {#each testimonials as testimonial}
+                <div class="p-8 bg-slate-800/50 border border-slate-700 rounded-2xl relative">
+                  {#if testimonial.isExample}
+                    <div class="absolute top-4 right-4 px-2 py-1 bg-slate-700/50 rounded text-xs text-slate-400">
+                      Example
+                    </div>
+                  {/if}
+                  <div class="flex gap-1 mb-4">
+                    {#each Array(5) as _}
+                      <Star class="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    {/each}
+                  </div>
+                  <p class="text-slate-300 mb-6 leading-relaxed">"{testimonial.quote}"</p>
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center font-bold">
+                      {testimonial.avatar}
+                    </div>
+                    <div>
+                      <div class="font-semibold">{testimonial.author}</div>
+                      <div class="text-sm text-slate-400">{testimonial.role}</div>
+                    </div>
+                  </div>
+                </div>
               {/each}
             </div>
-            <p class="text-slate-300 mb-6 leading-relaxed">"{testimonial.quote}"</p>
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center font-bold">
-                {testimonial.avatar}
-              </div>
-              <div>
-                <div class="font-semibold">{testimonial.author}</div>
-                <div class="text-sm text-slate-400">{testimonial.role}</div>
-              </div>
-            </div>
-          </div>
-        {/each}
-      </div>
     </div>
   </section>
 
@@ -387,60 +426,60 @@
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="py-12 px-6 border-t border-slate-800">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid md:grid-cols-4 gap-8 mb-12">
-        <div>
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
-              <Brain class="w-6 h-6 text-white" />
+    <!-- Footer -->
+    <footer class="py-12 px-6 border-t border-slate-800">
+      <div class="max-w-7xl mx-auto">
+        <div class="grid md:grid-cols-4 gap-8 mb-12">
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+                <Brain class="w-6 h-6 text-white" />
+              </div>
+              <span class="text-xl font-bold">AI Grant Crawler</span>
             </div>
-            <span class="text-xl font-bold">AI Grant Crawler</span>
+            <p class="text-slate-400">Autonomous grant discovery and proposal generation powered by AI.</p>
           </div>
-          <p class="text-slate-400">Autonomous grant discovery and proposal generation powered by AI.</p>
-        </div>
         
-        <div>
-          <h4 class="font-semibold mb-4">Product</h4>
-          <ul class="space-y-2 text-slate-400">
-            <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
-            <li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
-            <li><a href="/docs" class="hover:text-white transition-colors">Documentation</a></li>
-            <li><a href="/api" class="hover:text-white transition-colors">API</a></li>
-          </ul>
-        </div>
+          <div>
+            <h4 class="font-semibold mb-4">Product</h4>
+            <ul class="space-y-2 text-slate-400">
+              <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
+              <li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
+              <li><a href="/" class="hover:text-white transition-colors">Dashboard</a></li>
+              <li><a href="/alerts" class="hover:text-white transition-colors">Alerts</a></li>
+            </ul>
+          </div>
         
-        <div>
-          <h4 class="font-semibold mb-4">Company</h4>
-          <ul class="space-y-2 text-slate-400">
-            <li><a href="/about" class="hover:text-white transition-colors">About</a></li>
-            <li><a href="/blog" class="hover:text-white transition-colors">Blog</a></li>
-            <li><a href="/careers" class="hover:text-white transition-colors">Careers</a></li>
-            <li><a href="/contact" class="hover:text-white transition-colors">Contact</a></li>
-          </ul>
-        </div>
+          <div>
+            <h4 class="font-semibold mb-4">Resources</h4>
+            <ul class="space-y-2 text-slate-400">
+              <li><a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
+              <li><a href="/tracker" class="hover:text-white transition-colors">Proposal Tracker</a></li>
+              <li><a href="/documents" class="hover:text-white transition-colors">Documents</a></li>
+              <li><a href="mailto:support@aigrantcrawler.com" class="hover:text-white transition-colors">Support</a></li>
+            </ul>
+          </div>
         
-        <div>
-          <h4 class="font-semibold mb-4">Legal</h4>
-          <ul class="space-y-2 text-slate-400">
-            <li><a href="/privacy" class="hover:text-white transition-colors">Privacy Policy</a></li>
-            <li><a href="/terms" class="hover:text-white transition-colors">Terms of Service</a></li>
-            <li><a href="/security" class="hover:text-white transition-colors">Security</a></li>
-          </ul>
+          <div>
+            <h4 class="font-semibold mb-4">Account</h4>
+            <ul class="space-y-2 text-slate-400">
+              <li><a href="/login" class="hover:text-white transition-colors">Sign In</a></li>
+              <li><a href="/signup" class="hover:text-white transition-colors">Create Account</a></li>
+              <li><a href="mailto:sales@aigrantcrawler.com" class="hover:text-white transition-colors">Contact Sales</a></li>
+            </ul>
+          </div>
         </div>
-      </div>
       
-      <div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-        <p class="text-slate-400">&copy; 2026 AI Grant Crawler. All rights reserved.</p>
-        <div class="flex items-center gap-4">
-          <a href="https://twitter.com" class="text-slate-400 hover:text-white transition-colors">Twitter</a>
-          <a href="https://linkedin.com" class="text-slate-400 hover:text-white transition-colors">LinkedIn</a>
-          <a href="https://github.com" class="text-slate-400 hover:text-white transition-colors">GitHub</a>
+        <div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p class="text-slate-400">&copy; 2026 AI Grant Crawler. All rights reserved.</p>
+          <div class="flex items-center gap-6 text-sm text-slate-500">
+            <a href="mailto:privacy@aigrantcrawler.com" class="hover:text-slate-300 transition-colors">Privacy</a>
+            <a href="mailto:legal@aigrantcrawler.com" class="hover:text-slate-300 transition-colors">Terms</a>
+            <a href="https://github.com/Datakult0r/ai-grant-crawler-a2a-pro" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">GitHub</a>
+          </div>
         </div>
       </div>
-    </div>
-  </footer>
+    </footer>
 </div>
 
 <style>
@@ -460,6 +499,17 @@
     }
   }
   
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
   .animate-fade-in {
     animation: fade-in 0.6s ease-out forwards;
   }
@@ -467,5 +517,9 @@
   .animate-fade-in-up {
     opacity: 0;
     animation: fade-in-up 0.6s ease-out forwards;
+  }
+  
+  .animate-slide-down {
+    animation: slide-down 0.2s ease-out forwards;
   }
 </style>
