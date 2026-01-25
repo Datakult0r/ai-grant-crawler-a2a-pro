@@ -121,6 +121,7 @@ ALTER TABLE grants ADD COLUMN IF NOT EXISTS relevance_score INTEGER DEFAULT 0;
 ALTER TABLE grants ADD COLUMN IF NOT EXISTS keywords TEXT[];
 ALTER TABLE grants ADD COLUMN IF NOT EXISTS discovered_at TIMESTAMP DEFAULT NOW();
 ALTER TABLE grants ADD COLUMN IF NOT EXISTS source_id INTEGER REFERENCES grant_sources(id);
+ALTER TABLE grants ADD COLUMN IF NOT EXISTS funding_amount TEXT;
 
 -- Ensure uniqueness for automated discovery
 ALTER TABLE grants DROP CONSTRAINT IF EXISTS unique_source_url;

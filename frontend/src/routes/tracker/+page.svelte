@@ -1,40 +1,72 @@
 <script lang="ts">
-  import { Plus, MoreVertical } from 'lucide-svelte';
+  import { Plus, MoreVertical, Loader2 } from 'lucide-svelte';
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
   import { Button } from '$lib/components/ui/button';
   import { Badge } from '$lib/components/ui/badge';
+  import { onMount } from 'svelte';
+  import { fetchTracker } from '$lib/api';
 
   type Application = {
     id: number;
     grant: string;
     amount: string;
     submitted: string;
-    status: 'applied' | 'review' | 'awarded' | 'rejected';
+    status: 'draft' | 'applied' | 'review' | 'awarded' | 'rejected';
   };
 
-  const applications: Record<string, Application[]> = {
-    applied: [
-      { id: 1, grant: 'Horizon Europe - AI Innovation', amount: '€2.5M', submitted: '2024-11-15', status: 'applied' },
-      { id: 2, grant: 'COMPETE 2030 - Digital', amount: '€800K', submitted: '2024-11-10', status: 'applied' }
-    ],
-    review: [
-      { id: 3, grant: 'EIC Accelerator', amount: '€2M', submitted: '2024-10-20', status: 'review' },
-      { id: 4, grant: 'ANI Innovation', amount: '€500K', submitted: '2024-10-15', status: 'review' }
-    ],
-    awarded: [
-      { id: 5, grant: 'IAPMEI SME Growth', amount: '€300K', submitted: '2024-09-01', status: 'awarded' }
-    ],
-    rejected: [
-      { id: 6, grant: 'Horizon Europe - Green', amount: '€1.5M', submitted: '2024-08-15', status: 'rejected' }
-    ]
-  };
+  let applications = $state<Record<string, Application[]>>({
+    draft: [],
+    applied: [],
+    review: [],
+    awarded: [],
+    rejected: []
+  });
+  let loading = $state(true);
+  let error = $state<string | null>(null);
 
-  const columns = [
-    { id: 'applied', title: 'Applied', color: 'bg-secondary/20 border-secondary/30', count: applications.applied.length },
-    { id: 'review', title: 'Under Review', color: 'bg-yellow-500/20 border-yellow-500/30', count: applications.review.length },
-    { id: 'awarded', title: 'Awarded', color: 'bg-accent/20 border-accent/30', count: applications.awarded.length },
-    { id: 'rejected', title: 'Rejected', color: 'bg-destructive/20 border-destructive/30', count: applications.rejected.length }
-  ];
+  onMount(async () => {
+    try {
+      const data = await fetchTracker();
+      applications = data.applications || {
+        draft: [],
+        applied: [],
+        review: [],
+        awarded: [],
+        rejected: []
+      };
+    } catch (e) {
+      console.error('Failed to fetch tracker data:', e);
+      error = e instanceof Error ? e.message : 'Failed to load tracker';
+      // Use demo data on error
+      applications = {
+        draft: [],
+        applied: [
+          { id: 1, grant: 'Horizon Europe - AI Innovation', amount: '€2.5M', submitted: '2024-11-15', status: 'applied' },
+          { id: 2, grant: 'COMPETE 2030 - Digital', amount: '€800K', submitted: '2024-11-10', status: 'applied' }
+        ],
+        review: [
+          { id: 3, grant: 'EIC Accelerator', amount: '€2M', submitted: '2024-10-20', status: 'review' },
+          { id: 4, grant: 'ANI Innovation', amount: '€500K', submitted: '2024-10-15', status: 'review' }
+        ],
+        awarded: [
+          { id: 5, grant: 'IAPMEI SME Growth', amount: '€300K', submitted: '2024-09-01', status: 'awarded' }
+        ],
+        rejected: [
+          { id: 6, grant: 'Horizon Europe - Green', amount: '€1.5M', submitted: '2024-08-15', status: 'rejected' }
+        ]
+      };
+    } finally {
+      loading = false;
+    }
+  });
+
+  const columns = $derived([
+    { id: 'draft', title: 'Draft', color: 'bg-muted/20 border-muted/30', count: applications.draft?.length || 0 },
+    { id: 'applied', title: 'Applied', color: 'bg-secondary/20 border-secondary/30', count: applications.applied?.length || 0 },
+    { id: 'review', title: 'Under Review', color: 'bg-yellow-500/20 border-yellow-500/30', count: applications.review?.length || 0 },
+    { id: 'awarded', title: 'Awarded', color: 'bg-accent/20 border-accent/30', count: applications.awarded?.length || 0 },
+    { id: 'rejected', title: 'Rejected', color: 'bg-destructive/20 border-destructive/30', count: applications.rejected?.length || 0 }
+  ]);
 </script>
 
 <div class="p-8 space-y-6">
@@ -54,8 +86,18 @@
     </Button>
   </div>
 
+  <!-- Loading State -->
+  {#if loading}
+    <Card class="glass-card border-primary/30">
+      <CardContent class="p-8 flex flex-col items-center justify-center gap-4">
+        <Loader2 class="w-8 h-8 text-primary animate-spin" />
+        <p class="text-muted-foreground">Loading applications...</p>
+      </CardContent>
+    </Card>
+  {/if}
+
   <!-- Kanban Board -->
-  <div class="grid grid-cols-4 gap-4">
+  <div class="grid grid-cols-5 gap-4">
     {#each columns as column}
       <div class="space-y-4">
         <!-- Column Header -->
