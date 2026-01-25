@@ -102,8 +102,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-<<<<<<< HEAD
-
+DROP TRIGGER IF EXISTS update_grants_updated_at ON grants;
 CREATE TRIGGER update_grants_updated_at BEFORE UPDATE
 ON grants FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -126,11 +125,6 @@ ALTER TABLE grants ADD COLUMN IF NOT EXISTS source_id INTEGER REFERENCES grant_s
 -- Ensure uniqueness for automated discovery
 ALTER TABLE grants DROP CONSTRAINT IF EXISTS unique_source_url;
 ALTER TABLE grants ADD CONSTRAINT unique_source_url UNIQUE (source_url);
-
-=======
-DROP TRIGGER IF EXISTS update_grants_updated_at ON grants;
-CREATE TRIGGER update_grants_updated_at BEFORE UPDATE
-ON grants FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Enable Row Level Security (RLS) on all tables
 ALTER TABLE grants ENABLE ROW LEVEL SECURITY;
@@ -289,4 +283,3 @@ BEGIN
     END IF;
 END
 $$;
->>>>>>> 574b6b64e415ef0d8487d9e7a5e50cce14f31e9a
