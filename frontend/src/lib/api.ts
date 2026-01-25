@@ -120,7 +120,6 @@ export async function checkJulesHealth() {
     if (!res.ok) throw new Error('Failed to check Jules health');
     return res.json();
 }
-<<<<<<< HEAD
 
 // Tracker API - Get proposals grouped by status for kanban board
 export async function fetchTracker() {
