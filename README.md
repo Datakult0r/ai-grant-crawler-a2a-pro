@@ -262,41 +262,12 @@ cp .env.example .env
 # - GEMINI_API_KEY (free from Google AI Studio)
 # - OPENROUTER_API_KEY (for Maximum Quality mode)
 
-<<<<<<< HEAD
 npm run dev
 ```
-=======
-   - Supabase credentials
-   - Gemini API key
 
-   > **Note**: For production deployment, you must set `PUBLIC_API_URL` in your frontend environment (e.g., Vercel) to point to the live public URL of the deployed backend service (e.g., `https://your-backend.up.railway.app/api`).
+> **Note**: For production deployment, you must set `PUBLIC_API_URL` in your frontend environment (e.g., Vercel) to point to the live public URL of the deployed backend service (e.g., `https://your-backend.up.railway.app/api`).
 
-3. **Database Setup**
-   Run `schema.sql` in your Supabase SQL editor.
-
-4. **AI-Researcher Setup (Optional - for Research Track)**
-
-   > **Note**: The Research Track currently uses a mock implementation. For full AI-Researcher integration:
-
-   **Windows Users**: Requires Microsoft Visual C++ 14.0+ Build Tools
-
-   ```bash
-   # Install from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
-   ```
-
-   **Linux/Mac Users**:
-
-   ```bash
-   cd backend/ai-researcher
-   pip install -e .
-   playwright install
-   ```
-
-5. **Run Backend**
-   ```bash
-   npm run dev
-   ```
->>>>>>> 574b6b64e415ef0d8487d9e7a5e50cce14f31e9a
+**Database Setup**: Run `schema.sql` in your Supabase SQL editor.
 
 ### Frontend Setup
 
