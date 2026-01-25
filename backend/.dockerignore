@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.env
+.env.local
+.git
+.gitignore
+README.md
+*.md
+test_services.js
+output.txt
+output_2.txt
+ai-researcher

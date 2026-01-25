@@ -20,6 +20,9 @@ import teamRouter from "./routes/team.js";
 import adminSourcesRouter from "./routes/admin/sources.js";
 import { ScheduledDiscoveryJob } from "./jobs/scheduledDiscovery.js";
 import { startCronJobs } from "./jobs/cronScraper.js";
+// Phase 3: Email Notifications
+import notificationsRouter from "./routes/notifications.js";
+import { initializeScheduler } from "./services/notificationScheduler.js";
 
 const app = express();
 const PORT = env.port;
@@ -61,11 +64,13 @@ app.use("/api/tracker", trackerRouter);
 app.use("/api/predictor", predictorRouter);
 app.use("/api/documents", documentsRouter);
 app.use("/api/team", teamRouter);
-app.use("/api/admin/sources", adminSourcesRouter);// Phase 1: Sources Admin
+app.use("/api/admin/sources", adminSourcesRouter); // Phase 1: Sources Admin
+app.use("/api/notifications", notificationsRouter); // Phase 3: Email Notifications
 
 // Start Cron Jobs
 startCronJobs(); // Existing scraper
 ScheduledDiscoveryJob.init(); // Phase 1: Daily Grant Discovery
+initializeScheduler(); // Phase 3: Email Notification Scheduler
 
 app.listen(PORT, () => {
   console.log(`🚀 AI Grant Discovery API running on port ${PORT}`);
