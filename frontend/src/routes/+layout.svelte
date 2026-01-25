@@ -12,6 +12,7 @@
     Users,
     Brain
   } from 'lucide-svelte';
+  import Toast from '$lib/components/Toast.svelte';
 
   let { children } = $props();
 
@@ -59,4 +60,7 @@
   <main class="flex-1 overflow-auto">
     {@render children()}
   </main>
+  
+  <!-- Toast Notifications -->
+  <Toast />
 </div>

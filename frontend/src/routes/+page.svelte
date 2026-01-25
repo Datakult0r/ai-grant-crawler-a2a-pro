@@ -24,6 +24,7 @@
 
   import { onMount } from "svelte";
   import { fetchGrants } from "$lib/api";
+  import { toasts } from "$lib/stores/toast";
 
   // Grant data from Supabase
   interface GrantData {
@@ -124,13 +125,14 @@
   onMount(async () => {
     try {
       rawGrants = await fetchGrants();
+      if (rawGrants.length > 0) {
+        toasts.success('Grants loaded', `Found ${rawGrants.length} grants`);
+      }
     } catch (e) {
       console.error(e);
-      if (e instanceof Error) {
-        error = e.message;
-      } else {
-        error = String(e);
-      }
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      error = errorMessage;
+      toasts.error('Failed to load grants', errorMessage);
     } finally {
       loading = false;
     }
