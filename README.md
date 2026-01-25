@@ -27,35 +27,35 @@ graph LR
     %% PHASE 1: DISCOVERY
     subgraph PHASE_1 [PHASE 1: DISCOVERY & MATCHING]
         direction TB
-        Sources[📡 Sources: EU/NSF/Foundations] --> Firecrawl[🔥 Firecrawl Engine]
-        Firecrawl --> Analyzer[💎 AI Feature/Relevance Extractor]
+        Sources[Sources: EU/NSF/Foundations] --> Firecrawl[Firecrawl Engine]
+        Firecrawl --> Analyzer[AI Feature/Relevance Extractor]
         Analyzer -->|Score > 50| DB[(Supabase DB)]
-        Analyzer -->|Score < 50| Discard[🗑️ Discard]
+        Analyzer -->|Score < 50| Discard[Discard]
     end
 
     %% PHASE 2: INTERFACE
     subgraph PHASE_2 [PHASE 2: PLATFORM]
-        DB <==>|Real-time| Dashboard[🖥️ SvelteKit Dashboard]
-        Dashboard -->|User Clicks Apply| API[⚡ API Gateway]
+        DB <==>|Real-time| Dashboard[SvelteKit Dashboard]
+        Dashboard -->|User Clicks Apply| API[API Gateway]
     end
 
     %% PHASE 3: ORCHESTRATION
     subgraph PHASE_3 [PHASE 3: ORCHESTRATION]
         API --> Strategy{Strategy Router}
-        Strategy -->|Fast Track| Gemini[✨ Gemini 2.5 Pro]
-        Strategy -->|Research Track| LabRunner[🔬 Lab Orchestrator]
+        Strategy -->|Fast Track| Gemini[Gemini 2.5 Pro]
+        Strategy -->|Research Track| LabRunner[Lab Orchestrator]
     end
 
     %% PHASE 4: AGENT LAB
     subgraph PHASE_4 [PHASE 4: AGENT LABORATORY]
         direction TB
-        LabRunner --> PhD[📚 PhD Student\n(Claude Opus 4.5)]
-        PhD --> Postdoc1[📋 Postdoc Plan\n(Gemini 3 Pro)]
-        Postdoc1 --> Eng[🛠️ ML & SW Engineers\n(GPT-5 Codex + Claude)]
-        Eng --> Postdoc2[📈 Results Analysis\n(Gemini 3 Pro)]
-        Postdoc2 --> Prof[📝 Professor Writing\n(Claude Sonnet 4.5)]
-        Prof --> Review[✨ Review Board\n(Gemini 3 Pro)]
-        Review --> Final[📄 Research-Grade Proposal]
+        LabRunner --> PhD[PhD Student - Claude Opus 4.5]
+        PhD --> Postdoc1[Postdoc Plan - Gemini 3 Pro]
+        Postdoc1 --> Eng[ML and SW Engineers - GPT-5 Codex]
+        Eng --> Postdoc2[Results Analysis - Gemini 3 Pro]
+        Postdoc2 --> Prof[Professor Writing - Claude Sonnet 4.5]
+        Prof --> Review[Review Board - Gemini 3 Pro]
+        Review --> Final[Research-Grade Proposal]
     end
 ```
 
@@ -262,41 +262,12 @@ cp .env.example .env
 # - GEMINI_API_KEY (free from Google AI Studio)
 # - OPENROUTER_API_KEY (for Maximum Quality mode)
 
-<<<<<<< HEAD
 npm run dev
 ```
-=======
-   - Supabase credentials
-   - Gemini API key
 
-   > **Note**: For production deployment, you must set `PUBLIC_API_URL` in your frontend environment (e.g., Vercel) to point to the live public URL of the deployed backend service (e.g., `https://your-backend.up.railway.app/api`).
+> **Note**: For production deployment, you must set `PUBLIC_API_URL` in your frontend environment (e.g., Vercel) to point to the live public URL of the deployed backend service (e.g., `https://your-backend.up.railway.app/api`).
 
-3. **Database Setup**
-   Run `schema.sql` in your Supabase SQL editor.
-
-4. **AI-Researcher Setup (Optional - for Research Track)**
-
-   > **Note**: The Research Track currently uses a mock implementation. For full AI-Researcher integration:
-
-   **Windows Users**: Requires Microsoft Visual C++ 14.0+ Build Tools
-
-   ```bash
-   # Install from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
-   ```
-
-   **Linux/Mac Users**:
-
-   ```bash
-   cd backend/ai-researcher
-   pip install -e .
-   playwright install
-   ```
-
-5. **Run Backend**
-   ```bash
-   npm run dev
-   ```
->>>>>>> 574b6b64e415ef0d8487d9e7a5e50cce14f31e9a
+**Database Setup**: Run `schema.sql` in your Supabase SQL editor.
 
 ### Frontend Setup
 
