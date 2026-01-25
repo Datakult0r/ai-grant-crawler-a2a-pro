@@ -14,9 +14,48 @@
 
 import os
 
-# Model mappings - these are the optimal models per agent role
+# Low-cost mode: Use only free Gemini models for all agents
+# Set LOW_COST_MODE=false to use premium models (Claude, GPT-5)
+LOW_COST_MODE = os.environ.get('LOW_COST_MODE', 'true').lower() == 'true'
+
+# Low-cost model configuration - uses only FREE Gemini models
+# This is the default mode to avoid unexpected costs
+LOW_COST_MODEL_CONFIG = {
+    "phd_student": {
+        "model": "gemini-3-pro",
+        "provider": "gemini",
+        "fallback": "gemini-2.0-pro"
+    },
+    "postdoc": {
+        "model": "gemini-3-pro",
+        "provider": "gemini",
+        "fallback": "gemini-2.0-pro"
+    },
+    "professor": {
+        "model": "gemini-3-pro",
+        "provider": "gemini",
+        "fallback": "gemini-2.0-pro"
+    },
+    "ml_engineer": {
+        "model": "gemini-3-pro",
+        "provider": "gemini",
+        "fallback": "gemini-2.0-pro"
+    },
+    "sw_engineer": {
+        "model": "gemini-3-pro",
+        "provider": "gemini",
+        "fallback": "gemini-2.0-pro"
+    },
+    "reviewers": {
+        "model": "gemini-3-pro",
+        "provider": "gemini",
+        "fallback": "gemini-2.0-pro"
+    }
+}
+
+# Premium model configuration - uses optimal models per agent role (costs $7-15/proposal)
 # Use "openrouter:" prefix for OpenRouter models, "gemini:" for Gemini API, otherwise default to OpenAI API
-AGENT_MODEL_CONFIG = {
+PREMIUM_MODEL_CONFIG = {
     # Research & Strategy roles - need deep reasoning
     "phd_student": {
         "model": "claude-opus-4.5",         # Best for complex reasoning + writing
@@ -55,6 +94,9 @@ AGENT_MODEL_CONFIG = {
         "fallback": "claude-opus-4.5"
     }
 }
+
+# Select configuration based on LOW_COST_MODE
+AGENT_MODEL_CONFIG = LOW_COST_MODEL_CONFIG if LOW_COST_MODE else PREMIUM_MODEL_CONFIG
 
 # Provider configurations
 PROVIDER_CONFIG = {
@@ -110,7 +152,8 @@ def get_all_agent_models() -> dict:
 
 
 # Cost estimation per agent run (rough estimates in USD)
-ESTIMATED_COSTS = {
+# Premium mode costs
+PREMIUM_COSTS = {
     "phd_student": 2.50,      # Heavy reasoning, ~100k-500k tokens
     "postdoc": 0.00,          # Free (Gemini)
     "professor": 1.50,        # Writing-heavy, moderate tokens
@@ -119,17 +162,42 @@ ESTIMATED_COSTS = {
     "reviewers": 0.00         # Free (Gemini)
 }
 
+# Low-cost mode costs (all FREE with Gemini)
+LOW_COST_COSTS = {
+    "phd_student": 0.00,
+    "postdoc": 0.00,
+    "professor": 0.00,
+    "ml_engineer": 0.00,
+    "sw_engineer": 0.00,
+    "reviewers": 0.00
+}
+
+# Select costs based on mode
+ESTIMATED_COSTS = LOW_COST_COSTS if LOW_COST_MODE else PREMIUM_COSTS
+
 def estimate_run_cost() -> float:
     """Estimate total cost for running all agents once."""
     return sum(ESTIMATED_COSTS.values())
 
+def get_mode_info() -> dict:
+    """Get information about the current mode."""
+    return {
+        "low_cost_mode": LOW_COST_MODE,
+        "mode_name": "Low-Cost (FREE)" if LOW_COST_MODE else "Premium ($7-15/run)",
+        "estimated_cost": estimate_run_cost()
+    }
+
 
 if __name__ == "__main__":
-    print("🔬 Agent Laboratory - Maximum Quality Model Configuration")
+    mode_info = get_mode_info()
+    print("🔬 Agent Laboratory - Model Configuration")
+    print("=" * 60)
+    print(f"  MODE: {mode_info['mode_name']}")
+    print(f"  LOW_COST_MODE={LOW_COST_MODE}")
     print("=" * 60)
     for agent, config in AGENT_MODEL_CONFIG.items():
         model = get_agent_model(agent)
         cost = ESTIMATED_COSTS.get(agent, 0)
-        print(f"  {agent.upper():15} → {model:25} (${cost:.2f}/run)")
+        print(f"  {agent.upper():15} -> {model:25} (${cost:.2f}/run)")
     print("=" * 60)
     print(f"  Estimated total cost per research run: ${estimate_run_cost():.2f}")
