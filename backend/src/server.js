@@ -20,6 +20,8 @@ import teamRouter from "./routes/team.js";
 import adminSourcesRouter from "./routes/admin/sources.js";
 import { ScheduledDiscoveryJob } from "./jobs/scheduledDiscovery.js";
 import { startCronJobs } from "./jobs/cronScraper.js";
+// Phase 3: AI Model Configuration
+import settingsRouter from "./routes/settings.js";
 
 const app = express();
 const PORT = env.port;
@@ -61,7 +63,8 @@ app.use("/api/tracker", trackerRouter);
 app.use("/api/predictor", predictorRouter);
 app.use("/api/documents", documentsRouter);
 app.use("/api/team", teamRouter);
-app.use("/api/admin/sources", adminSourcesRouter);// Phase 1: Sources Admin
+app.use("/api/admin/sources", adminSourcesRouter); // Phase 1: Sources Admin
+app.use("/api/settings", settingsRouter); // Phase 3: AI Model Configuration
 
 // Start Cron Jobs
 startCronJobs(); // Existing scraper
