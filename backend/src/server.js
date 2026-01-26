@@ -25,6 +25,8 @@ import notificationsRouter from "./routes/notifications.js";
 import { initializeScheduler } from "./services/notificationScheduler.js";
 // Phase 3: Analytics Dashboard
 import analyticsRouter from "./routes/analytics.js";
+// Phase 3: AI Model Configuration
+import settingsRouter from "./routes/settings.js";
 
 const app = express();
 const PORT = env.port;
@@ -69,6 +71,7 @@ app.use("/api/team", teamRouter);
 app.use("/api/admin/sources", adminSourcesRouter); // Phase 1: Sources Admin
 app.use("/api/notifications", notificationsRouter); // Phase 3: Email Notifications
 app.use("/api/analytics", analyticsRouter); // Phase 3: Analytics Dashboard
+app.use("/api/settings", settingsRouter); // Phase 3: AI Model Configuration
 
 // Start Cron Jobs
 startCronJobs(); // Existing scraper
