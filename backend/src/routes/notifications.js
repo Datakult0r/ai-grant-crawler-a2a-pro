@@ -1,233 +1,306 @@
 import express from 'express';
-import { 
-  addSubscriber, 
-  removeSubscriber, 
-  getSubscribers,
-  triggerDeadlineCheck,
-  triggerNewGrantsCheck,
-  triggerWeeklyDigest
-} from '../services/notificationScheduler.js';
-import { 
-  notifyDeadlineApproaching,
-  notifyProposalStatusChange,
-  notifyNewHighRelevanceGrant,
-  sendWeeklyDigest
-} from '../services/emailService.js';
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-dotenv.config();
+import { supabase } from '../config/database.js';
+import { sendEmail, createDeadlineAlertEmail, createNewGrantAlertEmail, createWeeklyDigestEmail } from '../services/emailService.js';
+import crypto from 'crypto';
 
 const router = express.Router();
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
 
-// Subscribe to notifications
+// Subscribe to notifications - stores in Supabase
 router.post('/subscribe', async (req, res) => {
   try {
     const { email, preferences } = req.body;
     
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Valid email required' });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email format' });
-    }
-
-    addSubscriber(email, preferences || {});
+    // Generate unique unsubscribe token
+    const unsubscribeToken = crypto.randomUUID();
     
+    const defaultPreferences = {
+      deadlines: true,
+      newGrants: true,
+      weeklyDigest: true,
+      proposalUpdates: true
+    };
+
+    // Upsert subscriber in Supabase
+    const { data, error } = await supabase
+      .from('notification_subscribers')
+      .upsert({
+        email: email.toLowerCase().trim(),
+        unsubscribe_token: unsubscribeToken,
+        preferences: { ...defaultPreferences, ...preferences },
+        is_active: true,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'email',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[NOTIFICATIONS] Subscribe error:', error);
+      return res.status(500).json({ error: 'Failed to subscribe' });
+    }
+
     res.json({ 
       success: true, 
       message: 'Successfully subscribed to notifications',
-      preferences: {
-        deadlineAlerts: preferences?.deadlineAlerts !== false,
-        newGrantAlerts: preferences?.newGrantAlerts !== false,
-        weeklyDigest: preferences?.weeklyDigest !== false,
-        minRelevanceScore: preferences?.minRelevanceScore || 70,
-        deadlineWarningDays: preferences?.deadlineWarningDays || [7, 3, 1]
-      }
+      preferences: data.preferences
     });
-  } catch (error) {
-    console.error('Error subscribing to notifications:', error);
-    res.status(500).json({ error: 'Failed to subscribe to notifications' });
+  } catch (err) {
+    console.error('[NOTIFICATIONS] Subscribe error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Unsubscribe from notifications
-router.post('/unsubscribe', async (req, res) => {
+// Unsubscribe using token (one-click unsubscribe for CAN-SPAM compliance)
+router.get('/unsubscribe/:token', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { token } = req.params;
     
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
+    const { data, error } = await supabase
+      .from('notification_subscribers')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('unsubscribe_token', token)
+      .select()
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Invalid unsubscribe token' });
     }
 
-    removeSubscriber(email);
-    
     res.json({ 
       success: true, 
-      message: 'Successfully unsubscribed from notifications' 
+      message: 'Successfully unsubscribed from all notifications' 
     });
-  } catch (error) {
-    console.error('Error unsubscribing from notifications:', error);
-    res.status(500).json({ error: 'Failed to unsubscribe from notifications' });
-  }
-});
-
-// Get subscription status
-router.get('/status/:email', async (req, res) => {
-  try {
-    const { email } = req.params;
-    const subscribers = getSubscribers();
-    const subscriber = subscribers.find(s => s.email === email);
-    
-    if (subscriber) {
-      res.json({ 
-        subscribed: true, 
-        preferences: subscriber 
-      });
-    } else {
-      res.json({ 
-        subscribed: false 
-      });
-    }
-  } catch (error) {
-    console.error('Error getting subscription status:', error);
-    res.status(500).json({ error: 'Failed to get subscription status' });
+  } catch (err) {
+    console.error('[NOTIFICATIONS] Unsubscribe error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Update notification preferences
-router.patch('/preferences', async (req, res) => {
+router.put('/preferences/:token', async (req, res) => {
   try {
-    const { email, preferences } = req.body;
+    const { token } = req.params;
+    const { preferences } = req.body;
     
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
+    const { data, error } = await supabase
+      .from('notification_subscribers')
+      .update({ 
+        preferences,
+        updated_at: new Date().toISOString()
+      })
+      .eq('unsubscribe_token', token)
+      .select()
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Invalid token' });
     }
 
-    const subscribers = getSubscribers();
-    const existingSubscriber = subscribers.find(s => s.email === email);
-    
-    if (!existingSubscriber) {
-      return res.status(404).json({ error: 'Subscriber not found' });
-    }
-
-    // Update preferences by re-adding with merged preferences
-    addSubscriber(email, { ...existingSubscriber, ...preferences });
-    
     res.json({ 
       success: true, 
-      message: 'Preferences updated successfully' 
+      preferences: data.preferences 
     });
-  } catch (error) {
-    console.error('Error updating preferences:', error);
-    res.status(500).json({ error: 'Failed to update preferences' });
+  } catch (err) {
+    console.error('[NOTIFICATIONS] Update preferences error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Admin: Get all subscribers (should be protected in production)
+// Get preferences by token (for preference management page)
+router.get('/preferences/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    const { data, error } = await supabase
+      .from('notification_subscribers')
+      .select('email, preferences, is_active')
+      .eq('unsubscribe_token', token)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Invalid token' });
+    }
+
+    res.json({ 
+      email: data.email,
+      preferences: data.preferences,
+      isActive: data.is_active
+    });
+  } catch (err) {
+    console.error('[NOTIFICATIONS] Get preferences error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Admin: Get all subscribers (protected - requires auth middleware)
 router.get('/admin/subscribers', async (req, res) => {
   try {
-    const subscribers = getSubscribers();
+    // Check for admin authorization
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Verify the token with Supabase
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Invalid authentication token' });
+    }
+
+    const { data, error } = await supabase
+      .from('notification_subscribers')
+      .select('id, email, preferences, is_active, created_at, updated_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[NOTIFICATIONS] Admin list error:', error);
+      return res.status(500).json({ error: 'Failed to fetch subscribers' });
+    }
+
     res.json({ 
-      count: subscribers.length,
-      subscribers 
+      subscribers: data,
+      total: data.length,
+      active: data.filter(s => s.is_active).length
     });
-  } catch (error) {
-    console.error('Error getting subscribers:', error);
-    res.status(500).json({ error: 'Failed to get subscribers' });
+  } catch (err) {
+    console.error('[NOTIFICATIONS] Admin list error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Admin: Trigger deadline check manually
-router.post('/admin/trigger/deadlines', async (req, res) => {
+// Admin: Send test notification (protected)
+router.post('/admin/test', async (req, res) => {
   try {
-    await triggerDeadlineCheck();
-    res.json({ success: true, message: 'Deadline check triggered' });
-  } catch (error) {
-    console.error('Error triggering deadline check:', error);
-    res.status(500).json({ error: 'Failed to trigger deadline check' });
-  }
-});
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
-// Admin: Trigger new grants check manually
-router.post('/admin/trigger/new-grants', async (req, res) => {
-  try {
-    await triggerNewGrantsCheck();
-    res.json({ success: true, message: 'New grants check triggered' });
-  } catch (error) {
-    console.error('Error triggering new grants check:', error);
-    res.status(500).json({ error: 'Failed to trigger new grants check' });
-  }
-});
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Invalid authentication token' });
+    }
 
-// Admin: Trigger weekly digest manually
-router.post('/admin/trigger/weekly-digest', async (req, res) => {
-  try {
-    await triggerWeeklyDigest();
-    res.json({ success: true, message: 'Weekly digest triggered' });
-  } catch (error) {
-    console.error('Error triggering weekly digest:', error);
-    res.status(500).json({ error: 'Failed to trigger weekly digest' });
-  }
-});
-
-// Send test notification
-router.post('/test', async (req, res) => {
-  try {
     const { email, type } = req.body;
     
     if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
+      return res.status(400).json({ error: 'Email required' });
     }
 
-    // Get a sample grant for testing
-    const { data: grants } = await supabase
-      .from('grants')
-      .select('*')
-      .limit(1);
-    
-    const sampleGrant = grants?.[0] || {
-      id: 1,
-      name: 'Test Grant',
-      source: 'Test Source',
-      amount: '100,000',
+    // Create test content based on type
+    const testGrant = {
+      id: 'test-grant-123',
+      name: 'Test Grant - Horizon Europe AI Innovation',
+      source: 'Horizon Europe',
+      amount: '2,500,000',
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      relevance_score: 85,
-      description: 'This is a test grant notification.'
+      relevance_score: 85
     };
 
-    let result;
+    let emailContent;
+    const testToken = 'test-unsubscribe-token';
+
     switch (type) {
       case 'deadline':
-        result = await notifyDeadlineApproaching(email, sampleGrant, 7);
+        emailContent = createDeadlineAlertEmail(testGrant, 7, testToken);
         break;
-      case 'new-grant':
-        result = await notifyNewHighRelevanceGrant(email, sampleGrant);
+      case 'newGrant':
+        emailContent = createNewGrantAlertEmail([testGrant], testToken);
         break;
-      case 'status-change':
-        result = await notifyProposalStatusChange(email, { mode: 'fast', created_at: new Date() }, sampleGrant, 'submitted');
-        break;
-      case 'weekly-digest':
-        result = await sendWeeklyDigest(email, [sampleGrant], [], { newGrants: 5, upcomingDeadlines: 3, proposalsGenerated: 2 });
+      case 'digest':
+        emailContent = createWeeklyDigestEmail(
+          { newGrants: 5, proposalsGenerated: 3, upcomingDeadlines: 2 },
+          [testGrant],
+          testToken
+        );
         break;
       default:
-        result = await notifyDeadlineApproaching(email, sampleGrant, 7);
+        emailContent = createDeadlineAlertEmail(testGrant, 7, testToken);
     }
 
-    if (result.success) {
-      res.json({ success: true, message: `Test ${type || 'deadline'} notification sent to ${email}` });
-    } else {
-      res.status(500).json({ success: false, error: result.error });
+    const result = await sendEmail(email, emailContent.subject, emailContent.html);
+    
+    res.json({ 
+      success: result.success,
+      message: result.success ? 'Test email sent' : 'Failed to send test email',
+      error: result.error
+    });
+  } catch (err) {
+    console.error('[NOTIFICATIONS] Test email error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Trigger deadline notifications (called by scheduler)
+router.post('/trigger/deadlines', async (req, res) => {
+  try {
+    // This endpoint should be called by a cron job or scheduler
+    // Verify internal call or admin auth
+    const authHeader = req.headers.authorization;
+    const internalKey = req.headers['x-internal-key'];
+    
+    if (internalKey !== process.env.INTERNAL_API_KEY && !authHeader) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
-  } catch (error) {
-    console.error('Error sending test notification:', error);
-    res.status(500).json({ error: 'Failed to send test notification' });
+
+    // Get active subscribers who want deadline notifications
+    const { data: subscribers, error: subError } = await supabase
+      .from('notification_subscribers')
+      .select('email, unsubscribe_token, preferences')
+      .eq('is_active', true);
+
+    if (subError) {
+      return res.status(500).json({ error: 'Failed to fetch subscribers' });
+    }
+
+    const deadlineSubscribers = subscribers.filter(s => s.preferences?.deadlines !== false);
+
+    // Get grants with upcoming deadlines (1, 3, 7 days)
+    const now = new Date();
+    const deadlines = [1, 3, 7];
+    let emailsSent = 0;
+
+    for (const days of deadlines) {
+      const targetDate = new Date(now);
+      targetDate.setDate(targetDate.getDate() + days);
+      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0)).toISOString();
+      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999)).toISOString();
+
+      const { data: grants, error: grantError } = await supabase
+        .from('grants')
+        .select('*')
+        .gte('deadline', startOfDay)
+        .lte('deadline', endOfDay);
+
+      if (grantError || !grants?.length) continue;
+
+      for (const grant of grants) {
+        for (const subscriber of deadlineSubscribers) {
+          const emailContent = createDeadlineAlertEmail(grant, days, subscriber.unsubscribe_token);
+          await sendEmail(subscriber.email, emailContent.subject, emailContent.html);
+          emailsSent++;
+        }
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      emailsSent,
+      subscribersNotified: deadlineSubscribers.length
+    });
+  } catch (err) {
+    console.error('[NOTIFICATIONS] Trigger deadlines error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
