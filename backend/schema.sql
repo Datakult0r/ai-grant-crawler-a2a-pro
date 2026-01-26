@@ -111,10 +111,16 @@ CREATE TABLE IF NOT EXISTS grant_sources (
     id SERIAL PRIMARY KEY,
     url TEXT NOT NULL UNIQUE,
     name TEXT,
-    type TEXT, -- 'portal', 'aggregator', 'direct'
+    type TEXT, -- 'portal', 'aggregator', 'direct', 'manual'
     last_crawled_at TIMESTAMP,
-    status TEXT DEFAULT 'active'
+    status TEXT DEFAULT 'active',
+    scrape_frequency TEXT DEFAULT 'daily', -- 'hourly', 'daily', 'weekly', 'monthly'
+    created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Add scrape_frequency column if it doesn't exist (for existing databases)
+ALTER TABLE grant_sources ADD COLUMN IF NOT EXISTS scrape_frequency TEXT DEFAULT 'daily';
+ALTER TABLE grant_sources ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
 
 -- Grant Discovery columns
 ALTER TABLE grants ADD COLUMN IF NOT EXISTS relevance_score INTEGER DEFAULT 0;
