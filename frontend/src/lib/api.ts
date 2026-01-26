@@ -171,6 +171,18 @@ export async function downloadDocument(id: number) {
     return res.blob();
 }
 
+export async function exportDocumentPdf(id: number) {
+    const res = await fetch(`${API_BASE_URL}/documents/${id}/export/pdf`);
+    if (!res.ok) throw new Error('Failed to export PDF');
+    return res.blob();
+}
+
+export async function exportDocumentDocx(id: number) {
+    const res = await fetch(`${API_BASE_URL}/documents/${id}/export/docx`);
+    if (!res.ok) throw new Error('Failed to export Word document');
+    return res.blob();
+}
+
 // Team API - Get team members and activity
 export async function fetchTeam() {
     const res = await fetch(`${API_BASE_URL}/team`);
