@@ -4,34 +4,75 @@
 
   const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000/api';
 
-  let loading = $state(true);
-  let saving = $state(false);
-  let error = $state<string | null>(null);
-  let successMessage = $state<string | null>(null);
+    // Type definitions
+    interface ModelInfo {
+      name: string;
+      provider: string;
+      costPer1kTokens: number;
+      quality: string;
+    }
+
+    interface PresetInfo {
+      name: string;
+      description?: string;
+      estimatedCost: number;
+      estimatedTime: string;
+      models?: Record<string, string>;
+    }
+
+    interface RoleInfo {
+      name: string;
+      description: string;
+      defaultModel?: string;
+      estimatedTokens?: number;
+    }
+
+    interface CostEstimate {
+      totalCost: number;
+      totalTokens: number;
+      breakdown?: Array<{
+        role: string;
+        roleName: string;
+        modelName: string;
+        tokens: number;
+        cost: number;
+      }>;
+    }
+
+    interface CurrentConfig {
+      preset: string;
+      models: Record<string, string>;
+      estimatedCost?: number;
+    }
+
+    let loading = $state(true);
+    let saving = $state(false);
+    let error = $state<string | null>(null);
+    let successMessage = $state<string | null>(null);
   
-  let availableModels = $state({});
-  let agentRoles = $state({});
-  let presets = $state({});
-  let currentConfig = $state(null);
-  let selectedPreset = $state('low-cost');
-  let customModels = $state({});
-  let showAdvanced = $state(false);
-  let costEstimate = $state(null);
+    let availableModels = $state<Record<string, ModelInfo>>({});
+    let agentRoles = $state<Record<string, RoleInfo>>({});
+    let presets = $state<Record<string, PresetInfo>>({});
+    let currentConfig = $state<CurrentConfig | null>(null);
+    let selectedPreset = $state('low-cost');
+    let customModels = $state<Record<string, string>>({});
+    let showAdvanced = $state(false);
+    let costEstimate = $state<CostEstimate | null>(null);
 
-  const roleIcons = {
-    phd_student: GraduationCap,
-    postdoc: FlaskConical,
-    professor: BookOpen,
-    ml_engineer: Brain,
-    sw_engineer: Code,
-    reviewers: Users
-  };
+    const roleIcons: Record<string, typeof GraduationCap> = {
+      phd_student: GraduationCap,
+      postdoc: FlaskConical,
+      professor: BookOpen,
+      ml_engineer: Brain,
+      sw_engineer: Code,
+      reviewers: Users
+    };
 
-  const presetColors = {
-    'low-cost': 'bg-green-500',
-    'balanced': 'bg-blue-500',
-    'premium': 'bg-purple-500'
-  };
+    const presetColors: Record<string, string> = {
+      'low-cost': 'bg-green-500',
+      'balanced': 'bg-blue-500',
+      'premium': 'bg-purple-500'
+    };
 
   async function fetchData() {
     loading = true;
@@ -318,7 +359,7 @@
                 
                 <select
                   value={customModels[roleKey] || role.defaultModel}
-                  onchange={(e) => updateCustomModel(roleKey, e.target.value)}
+                  onchange={(e) => updateCustomModel(roleKey, (e.target as HTMLSelectElement).value)}
                   class="w-full p-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
                 >
                   {#each Object.entries(availableModels) as [modelId, model]}
