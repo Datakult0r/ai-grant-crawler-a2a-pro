@@ -41,10 +41,11 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 
 ### 2.3 Known Issues
 
-- [ ] Merge conflict in README.md (fixed in this branch)
-- [ ] PRs #10-18 not yet merged to main
-- [ ] No production deployment
-- [ ] Team page uses demo data (needs auth integration)
+- [x] Merge conflict in README.md (fixed)
+- [x] PRs #10-33 merged to main
+- [ ] Production deployment pending (backend to Fly.io, frontend to Vercel)
+- [ ] Team page uses demo data (needs auth integration for real users)
+- [ ] Automated tests not yet implemented (no test framework configured)
 
 ---
 
@@ -106,10 +107,10 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 **Description**: Implement user authentication to enable multi-tenant usage.
 
 **Tasks**:
-- [ ] Integrate Supabase Auth
-- [ ] Add login/signup pages
-- [ ] Protect API routes with auth middleware
-- [ ] Connect Team page to real user data
+- [x] Integrate Supabase Auth (auth store, middleware implemented)
+- [x] Add login/signup pages (functional with Supabase)
+- [x] Protect API routes with auth middleware (authMiddleware, optionalAuthMiddleware)
+- [ ] Connect Team page to real user data (currently uses demo data)
 - [ ] Add user profile settings
 - [ ] Implement role-based access (admin, user)
 
@@ -118,19 +119,19 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 **Description**: Allow users to configure and manage grant sources.
 
 **Tasks**:
-- [ ] Create admin UI for grant sources
-- [ ] Implement source enable/disable toggle
-- [ ] Add custom source URL input
-- [ ] Configure scraping frequency per source
-- [ ] Add source health monitoring
+- [x] Create admin UI for grant sources (/admin/sources page with AdminGrantSources component)
+- [x] Implement source enable/disable toggle (PATCH /api/admin/sources/:id)
+- [x] Add custom source URL input (POST /api/admin/sources)
+- [x] Configure scraping frequency per source (hourly/daily/weekly/monthly)
+- [x] Add source health monitoring (GET /api/admin/sources/stats)
 
 #### 2.3 Proposal Export & Formatting
 **Effort**: 2-3 hours  
 **Description**: Enable exporting proposals in multiple formats.
 
 **Tasks**:
-- [ ] PDF export with professional formatting
-- [ ] Word document export (.docx)
+- [x] PDF export with professional formatting (pdfkit integration)
+- [x] Word document export (.docx) (docx library integration)
 - [ ] LaTeX export for academic submissions
 - [ ] Custom template support
 - [ ] Include charts and visualizations
@@ -140,7 +141,7 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 **Description**: Make the tracker kanban board fully interactive.
 
 **Tasks**:
-- [ ] Implement drag-and-drop between columns
+- [x] Implement drag-and-drop between columns (with optimistic UI updates)
 - [ ] Add inline editing for proposal details
 - [ ] Add deadline reminders
 - [ ] Implement filtering and search

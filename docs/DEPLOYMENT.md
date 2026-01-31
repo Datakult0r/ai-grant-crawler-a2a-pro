@@ -130,9 +130,23 @@ Access your app's metrics and logs at: https://fly.io/apps/your-app-name
 
 ### Health Check
 
-The backend exposes a `/health` endpoint that returns:
-- Database connectivity status
-- API key configuration status
+The backend exposes several monitoring endpoints:
+
+**`/health`** - Basic health check
+- Returns: `{ status: "ok", timestamp, environment }`
+
+**`/version`** - Application version info
+- Returns: `{ version, name, buildTime, nodeVersion, environment }`
+
+**`/metrics`** - Runtime metrics
+- Returns: `{ uptime, uptimeFormatted, requestCount, memory: { heapUsed, heapTotal, rss }, environment }`
+
+Example:
+```bash
+curl https://your-app.fly.dev/health
+curl https://your-app.fly.dev/version
+curl https://your-app.fly.dev/metrics
+```
 
 ## Troubleshooting
 
