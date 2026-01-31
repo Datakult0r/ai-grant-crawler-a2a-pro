@@ -17,15 +17,16 @@ const SSE_CONFIG = {
   RETRY_DELAY_MS: 2000,
 };
 
-// Research phases for tracking
+// Research phases matching Agent Laboratory specification
+// See: Agent Laboratory paper - 7 research phases with specialized agents
 const RESEARCH_PHASES = [
-  { id: 0, name: "Initial Analysis", description: "Analyzing grant requirements" },
-  { id: 1, name: "Brainstorming", description: "Generating initial ideas" },
-  { id: 2, name: "Deep Research", description: "Conducting in-depth research" },
-  { id: 3, name: "Synthesis", description: "Synthesizing findings" },
-  { id: 4, name: "Writing", description: "Drafting proposal content" },
-  { id: 5, name: "Peer Review", description: "Reviewing and refining" },
-  { id: 6, name: "Finalization", description: "Final polish and formatting" },
+  { id: 0, name: "Literature Review", description: "PhD Student reviewing relevant literature and prior work", agent: "PhD Student" },
+  { id: 1, name: "Plan Formulation", description: "Postdoc and Professor formulating research plan", agent: "Postdoc" },
+  { id: 2, name: "Data Preparation", description: "ML Engineer preparing datasets and preprocessing", agent: "ML Engineer" },
+  { id: 3, name: "Running Experiments", description: "ML Engineer and SW Engineer running experiments", agent: "ML Engineer" },
+  { id: 4, name: "Results Interpretation", description: "Team analyzing and interpreting results", agent: "Professor" },
+  { id: 5, name: "Report Writing", description: "PhD Student and Postdoc drafting the report", agent: "PhD Student" },
+  { id: 6, name: "Report Refinement", description: "Professor reviewing and refining the final report", agent: "Professor" },
 ];
 
 export class ResearchService {
@@ -192,17 +193,19 @@ export class ResearchService {
             const phaseNum = parsed.stage ?? parsed.phase ?? currentPhase;
             currentPhase = phaseNum;
             
-            // Enhanced phase event with phase details
-            res.write(
-              `data: ${JSON.stringify({
-                type: "phase",
-                phase: currentPhase,
-                phaseName: RESEARCH_PHASES[currentPhase]?.name || "Unknown",
-                phaseDescription: RESEARCH_PHASES[currentPhase]?.description || "",
-                totalPhases: RESEARCH_PHASES.length,
-                progress: Math.round((currentPhase / RESEARCH_PHASES.length) * 100),
-              })}\n\n`
-            );
+                        // Enhanced phase event with phase details and agent info
+                        const phaseInfo = RESEARCH_PHASES[currentPhase] || {};
+                        res.write(
+                          `data: ${JSON.stringify({
+                            type: "phase",
+                            phase: currentPhase,
+                            phaseName: phaseInfo.name || "Unknown",
+                            phaseDescription: phaseInfo.description || "",
+                            agent: phaseInfo.agent || "System",
+                            totalPhases: RESEARCH_PHASES.length,
+                            progress: Math.round((currentPhase / RESEARCH_PHASES.length) * 100),
+                          })}\n\n`
+                        );
 
             // Update database on stage changes
             supabase

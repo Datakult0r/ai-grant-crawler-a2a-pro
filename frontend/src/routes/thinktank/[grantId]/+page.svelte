@@ -21,8 +21,9 @@
   import { Badge } from "$lib/components/ui/badge";
   import { fetchGrants, generateProposal } from "$lib/api";
   import { goto } from "$app/navigation";
-  import ResearchVisualization from "$lib/components/ResearchVisualization.svelte";
-  import ResearchProgress from "$lib/components/ResearchProgress.svelte";
+    import ResearchVisualization from "$lib/components/ResearchVisualization.svelte";
+    import ResearchProgress from "$lib/components/ResearchProgress.svelte";
+    import PixelLabVisualization from "$lib/components/PixelLabVisualization.svelte";
 
   // SSE Connection Recovery Configuration
   const SSE_RECONNECT_DELAY_MS = 3000;
@@ -70,15 +71,19 @@
     mission: "To democratize access to early disease detection.",
   };
 
-  const phases = [
-    { name: "Initial Analysis", icon: FileText, color: "text-purple-400" },
-    { name: "Brainstorming", icon: Users, color: "text-blue-400" },
-    { name: "Deep Research", icon: Brain, color: "text-green-400" },
-    { name: "Synthesis", icon: Lightbulb, color: "text-cyan-400" },
-    { name: "Writing", icon: FileText, color: "text-orange-400" },
-    { name: "Peer Review", icon: CheckCircle, color: "text-pink-400" },
-    { name: "Finalization", icon: Zap, color: "text-yellow-400" },
-  ];
+    // Agent Laboratory phases (matching the paper specification)
+    const phases = [
+      { name: "Literature Review", icon: FileText, color: "text-purple-400" },
+      { name: "Plan Formulation", icon: Users, color: "text-blue-400" },
+      { name: "Data Preparation", icon: Brain, color: "text-green-400" },
+      { name: "Running Experiments", icon: Lightbulb, color: "text-cyan-400" },
+      { name: "Results Interpretation", icon: FileText, color: "text-orange-400" },
+      { name: "Report Writing", icon: CheckCircle, color: "text-pink-400" },
+      { name: "Report Refinement", icon: Zap, color: "text-yellow-400" },
+    ];
+  
+    // Track active agent for pixel visualization
+    let activeAgentName = $state("");
 
   const researchers = [
     {
@@ -205,45 +210,60 @@
       totalPhases = data.totalPhases || 7;
     });
 
-    // Handle phase updates with enhanced info
-    eventSource.addEventListener("phase", (event: any) => {
-      const data = JSON.parse(event.data);
-      currentPhase = data.phase;
-      phaseName = data.phaseName || "";
-      phaseDescription = data.phaseDescription || "";
-      totalPhases = data.totalPhases || 7;
-      progress = data.progress || Math.round((currentPhase / totalPhases) * 100);
-      animateResearchersByPhase(currentPhase);
-    });
+        // Handle phase updates with enhanced info (Agent Laboratory spec)
+        eventSource.addEventListener("phase", (event: any) => {
+          const data = JSON.parse(event.data);
+          currentPhase = data.phase;
+          phaseName = data.phaseName || "";
+          phaseDescription = data.phaseDescription || "";
+          totalPhases = data.totalPhases || 7;
+          progress = data.progress || Math.round((currentPhase / totalPhases) * 100);
+      
+          // Update active agent for pixel visualization
+          if (data.agent) {
+            activeAgentName = data.agent;
+          }
+      
+          animateResearchersByPhase(currentPhase);
+        });
 
-    eventSource.addEventListener("log", (event: any) => {
-      const data = JSON.parse(event.data);
-      activities = [
-        ...activities,
-        {
-          text: data.message,
-          agent: data.agent || "System",
-          timestamp: data.timestamp || new Date().toISOString(),
-          status: data.status || "Processing",
-        },
-      ];
+        eventSource.addEventListener("log", (event: any) => {
+          const data = JSON.parse(event.data);
+          activities = [
+            ...activities,
+            {
+              text: data.message,
+              agent: data.agent || "System",
+              timestamp: data.timestamp || new Date().toISOString(),
+              status: data.status || "Processing",
+            },
+          ];
 
-      // Simulate speech bubble
-      if (data.agent && data.agent !== "System") {
-        const researcherIndex = researchers.findIndex(
-          (r) => r.name.includes(data.agent) || data.agent.includes(r.name)
-        );
-        if (researcherIndex >= 0) {
-          activeSpeaker = researcherIndex;
-          speechBubble =
-            data.message.substring(0, 50) +
-            (data.message.length > 50 ? "..." : "");
-          setTimeout(() => {
-            activeSpeaker = null;
-          }, 3000);
-        }
-      }
-    });
+          // Update active agent for pixel visualization
+          if (data.agent && data.agent !== "System") {
+            activeAgentName = data.agent;
+            speechBubble =
+              data.message.substring(0, 50) +
+              (data.message.length > 50 ? "..." : "");
+        
+            // Also update legacy researcher visualization
+            const researcherIndex = researchers.findIndex(
+              (r) => r.name.includes(data.agent) || data.agent.includes(r.name)
+            );
+            if (researcherIndex >= 0) {
+              activeSpeaker = researcherIndex;
+              setTimeout(() => {
+                activeSpeaker = null;
+                activeAgentName = "";
+              }, 3000);
+            } else {
+              // Clear after timeout even if no researcher match
+              setTimeout(() => {
+                activeAgentName = "";
+              }, 3000);
+            }
+          }
+        });
 
     eventSource.addEventListener("progress", (event: any) => {
       const data = JSON.parse(event.data);
@@ -552,27 +572,41 @@
         </div>
       </div>
 
-      <!-- Center - Pixel Art Research Visualization -->
-      <div class="lg:col-span-6">
-        {#if showAgentLab && grantId}
-          <ResearchProgress grantId={grantId} />
-        {:else if (isRunning || showOutput) && grantId}
-          <ResearchVisualization proposalId={proposalIdState} grantId={grantId} />
-        {:else}
-          <div class="glass-card p-8 min-h-[600px]">
-            <div
-              class="relative w-full h-[600px] bg-gradient-to-br from-background/50 to-muted/30 rounded-2xl overflow-hidden"
-            >
-              <div class="absolute inset-0 flex items-center justify-center">
-                <div class="text-center text-muted-foreground">
-                  <Brain class="w-16 h-16 mx-auto mb-4 opacity-20" />
-                  <p>Waiting to start pixel-art research visualization...</p>
+            <!-- Center - Pixel Art Research Visualization -->
+            <div class="lg:col-span-6">
+              {#if showAgentLab && grantId}
+                <ResearchProgress grantId={grantId} />
+              {:else}
+                <div class="glass-card p-6 min-h-[450px]">
+                  <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold flex items-center gap-2">
+                      <Brain class="w-5 h-5 text-purple-400" />
+                      Agent Laboratory
+                    </h2>
+                    {#if isRunning}
+                      <Badge variant="outline" class="border-green-500/50 text-green-400 animate-pulse">
+                        Research in Progress
+                      </Badge>
+                    {/if}
+                  </div>
+            
+                  <!-- Pixel Art Visualization -->
+                  <PixelLabVisualization 
+                    currentPhase={currentPhase}
+                    totalPhases={totalPhases}
+                    activeAgent={activeAgentName}
+                    agentMessage={speechBubble}
+                    isRunning={isRunning}
+                  />
+            
+                  {#if !isRunning && !showOutput}
+                    <p class="text-center text-sm text-muted-foreground mt-4">
+                      Click "Start AI Thinktank" to begin the research process
+                    </p>
+                  {/if}
                 </div>
-              </div>
+              {/if}
             </div>
-          </div>
-        {/if}
-      </div>
 
       <!-- Right Sidebar - Activity Feed -->
       <div class="lg:col-span-3">
