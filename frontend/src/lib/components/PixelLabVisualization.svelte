@@ -257,230 +257,236 @@
     drawStatusIndicator();
   }
 
-  function drawLabFloor() {
-    if (!ctx) return;
+    function drawLabFloor() {
+      if (!ctx) return;
+      const c = ctx; // Store in local variable for TypeScript
     
-    // Draw a simple tiled floor pattern
-    for (let x = 0; x < CANVAS_WIDTH; x += TILE_SIZE * 2) {
-      for (let y = 100; y < CANVAS_HEIGHT; y += TILE_SIZE * 2) {
-        const isLight = ((x / (TILE_SIZE * 2)) + (y / (TILE_SIZE * 2))) % 2 === 0;
-        ctx.fillStyle = isLight ? "#2a2a4e" : "#1e1e3a";
-        ctx.fillRect(x, y, TILE_SIZE * 2, TILE_SIZE * 2);
+      // Draw a simple tiled floor pattern
+      for (let x = 0; x < CANVAS_WIDTH; x += TILE_SIZE * 2) {
+        for (let y = 100; y < CANVAS_HEIGHT; y += TILE_SIZE * 2) {
+          const isLight = ((x / (TILE_SIZE * 2)) + (y / (TILE_SIZE * 2))) % 2 === 0;
+          c.fillStyle = isLight ? "#2a2a4e" : "#1e1e3a";
+          c.fillRect(x, y, TILE_SIZE * 2, TILE_SIZE * 2);
+        }
+      }
+
+      // Draw wall at top
+      c.fillStyle = "#3a3a5e";
+      c.fillRect(0, 80, CANVAS_WIDTH, 20);
+    }
+
+    function drawLabEquipment() {
+      if (!ctx) return;
+      const c = ctx; // Store in local variable for TypeScript
+
+      // Draw test tubes on the right
+      c.fillStyle = "#4ade80";
+      c.globalAlpha = 0.6;
+      for (let i = 0; i < 3; i++) {
+        c.fillRect(CANVAS_WIDTH - 60 + i * 15, 120, 10, 40);
+        c.fillStyle = "#22d3ee";
+        c.fillRect(CANVAS_WIDTH - 60 + i * 15, 130, 10, 20);
+        c.fillStyle = "#4ade80";
+      }
+      c.globalAlpha = 1;
+
+      // Draw computer monitors
+      c.fillStyle = "#374151";
+      for (let i = 0; i < 5; i++) {
+        const x = 70 + i * 100;
+        // Monitor
+        c.fillRect(x, 170, 40, 30);
+        // Screen glow
+        c.fillStyle = isRunning ? "#60a5fa" : "#4b5563";
+        c.fillRect(x + 2, 172, 36, 26);
+        c.fillStyle = "#374151";
+        // Stand
+        c.fillRect(x + 15, 200, 10, 10);
+      }
+
+      // Draw whiteboard
+      c.fillStyle = "#f3f4f6";
+      c.fillRect(CANVAS_WIDTH / 2 - 60, 85, 120, 60);
+      c.strokeStyle = "#9ca3af";
+      c.lineWidth = 2;
+      c.strokeRect(CANVAS_WIDTH / 2 - 60, 85, 120, 60);
+
+      // Draw some "writing" on whiteboard if in planning phase
+      if (currentPhase === 1 || currentPhase === 4) {
+        c.fillStyle = "#3b82f6";
+        c.fillRect(CANVAS_WIDTH / 2 - 50, 95, 40, 3);
+        c.fillRect(CANVAS_WIDTH / 2 - 50, 105, 60, 3);
+        c.fillRect(CANVAS_WIDTH / 2 - 50, 115, 30, 3);
+        c.fillStyle = "#ef4444";
+        c.fillRect(CANVAS_WIDTH / 2 + 10, 95, 40, 3);
+        c.fillRect(CANVAS_WIDTH / 2 + 10, 105, 50, 3);
       }
     }
 
-    // Draw wall at top
-    ctx.fillStyle = "#3a3a5e";
-    ctx.fillRect(0, 80, CANVAS_WIDTH, 20);
-  }
+    function drawBreadcrumbTimeline() {
+      if (!ctx) return;
+      const c = ctx; // Store in local variable for TypeScript
 
-  function drawLabEquipment() {
-    if (!ctx) return;
+      const timelineY = 30;
+      const startX = 30;
+      const phaseWidth = (CANVAS_WIDTH - 60) / totalPhases;
 
-    // Draw test tubes on the right
-    ctx.fillStyle = "#4ade80";
-    ctx.globalAlpha = 0.6;
-    for (let i = 0; i < 3; i++) {
-      ctx.fillRect(CANVAS_WIDTH - 60 + i * 15, 120, 10, 40);
-      ctx.fillStyle = "#22d3ee";
-      ctx.fillRect(CANVAS_WIDTH - 60 + i * 15, 130, 10, 20);
-      ctx.fillStyle = "#4ade80";
-    }
-    ctx.globalAlpha = 1;
+      // Draw timeline background
+      c.fillStyle = "#374151";
+      c.fillRect(startX, timelineY + 8, CANVAS_WIDTH - 60, 4);
 
-    // Draw computer monitors
-    ctx.fillStyle = "#374151";
-    for (let i = 0; i < 5; i++) {
-      const x = 70 + i * 100;
-      // Monitor
-      ctx.fillRect(x, 170, 40, 30);
-      // Screen glow
-      ctx.fillStyle = isRunning ? "#60a5fa" : "#4b5563";
-      ctx.fillRect(x + 2, 172, 36, 26);
-      ctx.fillStyle = "#374151";
-      // Stand
-      ctx.fillRect(x + 15, 200, 10, 10);
-    }
-
-    // Draw whiteboard
-    ctx.fillStyle = "#f3f4f6";
-    ctx.fillRect(CANVAS_WIDTH / 2 - 60, 85, 120, 60);
-    ctx.strokeStyle = "#9ca3af";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(CANVAS_WIDTH / 2 - 60, 85, 120, 60);
-
-    // Draw some "writing" on whiteboard if in planning phase
-    if (currentPhase === 1 || currentPhase === 4) {
-      ctx.fillStyle = "#3b82f6";
-      ctx.fillRect(CANVAS_WIDTH / 2 - 50, 95, 40, 3);
-      ctx.fillRect(CANVAS_WIDTH / 2 - 50, 105, 60, 3);
-      ctx.fillRect(CANVAS_WIDTH / 2 - 50, 115, 30, 3);
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(CANVAS_WIDTH / 2 + 10, 95, 40, 3);
-      ctx.fillRect(CANVAS_WIDTH / 2 + 10, 105, 50, 3);
-    }
-  }
-
-  function drawBreadcrumbTimeline() {
-    if (!ctx) return;
-
-    const timelineY = 30;
-    const startX = 30;
-    const phaseWidth = (CANVAS_WIDTH - 60) / totalPhases;
-
-    // Draw timeline background
-    ctx.fillStyle = "#374151";
-    ctx.fillRect(startX, timelineY + 8, CANVAS_WIDTH - 60, 4);
-
-    // Draw phase markers
-    RESEARCH_PHASES.forEach((phase, i) => {
-      const x = startX + i * phaseWidth + phaseWidth / 2;
+      // Draw phase markers
+      RESEARCH_PHASES.forEach((phase, i) => {
+        const x = startX + i * phaseWidth + phaseWidth / 2;
       
-      // Circle marker
-      ctx.beginPath();
-      ctx.arc(x, timelineY + 10, 8, 0, Math.PI * 2);
+        // Circle marker
+        c.beginPath();
+        c.arc(x, timelineY + 10, 8, 0, Math.PI * 2);
       
-      if (i < currentPhase) {
-        // Completed
-        ctx.fillStyle = "#22c55e";
-      } else if (i === currentPhase) {
-        // Current - pulsing
-        const pulse = Math.sin(frameCount * 0.1) * 0.3 + 0.7;
-        ctx.fillStyle = `rgba(59, 130, 246, ${pulse})`;
-      } else {
-        // Future
-        ctx.fillStyle = "#4b5563";
+        if (i < currentPhase) {
+          // Completed
+          c.fillStyle = "#22c55e";
+        } else if (i === currentPhase) {
+          // Current - pulsing
+          const pulse = Math.sin(frameCount * 0.1) * 0.3 + 0.7;
+          c.fillStyle = `rgba(59, 130, 246, ${pulse})`;
+        } else {
+          // Future
+          c.fillStyle = "#4b5563";
+        }
+        c.fill();
+
+        // Phase name
+        c.fillStyle = i <= currentPhase ? "#e5e7eb" : "#6b7280";
+        c.font = "9px monospace";
+        c.textAlign = "center";
+        c.fillText(phase.shortName, x, timelineY + 30);
+      });
+
+      // Draw progress line
+      if (currentPhase > 0) {
+        const progressWidth = (currentPhase / totalPhases) * (CANVAS_WIDTH - 60);
+        c.fillStyle = "#22c55e";
+        c.fillRect(startX, timelineY + 8, progressWidth, 4);
       }
-      ctx.fill();
-
-      // Phase name
-      ctx.fillStyle = i <= currentPhase ? "#e5e7eb" : "#6b7280";
-      ctx.font = "9px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText(phase.shortName, x, timelineY + 30);
-    });
-
-    // Draw progress line
-    if (currentPhase > 0) {
-      const progressWidth = (currentPhase / totalPhases) * (CANVAS_WIDTH - 60);
-      ctx.fillStyle = "#22c55e";
-      ctx.fillRect(startX, timelineY + 8, progressWidth, 4);
     }
-  }
 
-  function drawAgents() {
-    if (!ctx) return;
+    function drawAgents() {
+      if (!ctx) return;
+      const c = ctx; // Store in local variable for TypeScript
 
-    agentPositions.forEach((pos, i) => {
-      const agent = AGENTS[i];
+      agentPositions.forEach((pos, i) => {
+        const agent = AGENTS[i];
       
-      // Draw shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.ellipse(pos.x + 16, pos.y + 30, 12, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
+        // Draw shadow
+        c.fillStyle = "rgba(0, 0, 0, 0.3)";
+        c.beginPath();
+        c.ellipse(pos.x + 16, pos.y + 30, 12, 4, 0, 0, Math.PI * 2);
+        c.fill();
 
-      // Try to draw sprite, fallback to colored circle
-      if (imagesLoaded && labNPCsImg.complete) {
-        // Calculate sprite position (32x32 sprites, 8 columns)
-        const spriteX = agent.spriteCol * SPRITE_SIZE;
-        const spriteY = agent.spriteRow * SPRITE_SIZE;
+        // Try to draw sprite, fallback to colored circle
+        if (imagesLoaded && labNPCsImg.complete) {
+          // Calculate sprite position (32x32 sprites, 8 columns)
+          const spriteX = agent.spriteCol * SPRITE_SIZE;
+          const spriteY = agent.spriteRow * SPRITE_SIZE;
         
-        // Animation frame (idle bounce)
-        const bounce = pos.isActive ? Math.sin(frameCount * 0.15) * 2 : 0;
+          // Animation frame (idle bounce)
+          const bounce = pos.isActive ? Math.sin(frameCount * 0.15) * 2 : 0;
         
-        ctx.drawImage(
-          labNPCsImg,
-          spriteX, spriteY, SPRITE_SIZE, SPRITE_SIZE,
-          pos.x, pos.y - bounce, SPRITE_SIZE, SPRITE_SIZE
-        );
-      } else {
-        // Fallback: colored circle with letter
-        ctx.fillStyle = agent.color;
-        ctx.beginPath();
-        ctx.arc(pos.x + 16, pos.y + 16, 14, 0, Math.PI * 2);
-        ctx.fill();
+          c.drawImage(
+            labNPCsImg,
+            spriteX, spriteY, SPRITE_SIZE, SPRITE_SIZE,
+            pos.x, pos.y - bounce, SPRITE_SIZE, SPRITE_SIZE
+          );
+        } else {
+          // Fallback: colored circle with letter
+          c.fillStyle = agent.color;
+          c.beginPath();
+          c.arc(pos.x + 16, pos.y + 16, 14, 0, Math.PI * 2);
+          c.fill();
 
-        // Agent initial
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 12px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText(agent.name[0], pos.x + 16, pos.y + 20);
-      }
+          // Agent initial
+          c.fillStyle = "#ffffff";
+          c.font = "bold 12px monospace";
+          c.textAlign = "center";
+          c.fillText(agent.name[0], pos.x + 16, pos.y + 20);
+        }
 
-      // Active indicator (glow)
-      if (pos.isActive && isRunning) {
-        ctx.strokeStyle = agent.color;
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = Math.sin(frameCount * 0.1) * 0.5 + 0.5;
-        ctx.beginPath();
-        ctx.arc(pos.x + 16, pos.y + 16, 20, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
+        // Active indicator (glow)
+        if (pos.isActive && isRunning) {
+          c.strokeStyle = agent.color;
+          c.lineWidth = 2;
+          c.globalAlpha = Math.sin(frameCount * 0.1) * 0.5 + 0.5;
+          c.beginPath();
+          c.arc(pos.x + 16, pos.y + 16, 20, 0, Math.PI * 2);
+          c.stroke();
+          c.globalAlpha = 1;
+        }
 
-      // Agent name below
-      ctx.fillStyle = pos.isActive ? "#ffffff" : "#9ca3af";
-      ctx.font = "8px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText(agent.name, pos.x + 16, pos.y + 45);
-    });
-  }
-
-  function drawSpeechBubble(agentIndex: number) {
-    if (!ctx || agentIndex < 0 || !speechBubbleText) return;
-
-    const pos = agentPositions[agentIndex];
-    const bubbleX = pos.x - 20;
-    const bubbleY = pos.y - 50;
-    const bubbleWidth = Math.min(speechBubbleText.length * 6 + 20, 150);
-    const bubbleHeight = 30;
-
-    // Bubble background
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 8);
-    ctx.fill();
-
-    // Bubble tail
-    ctx.beginPath();
-    ctx.moveTo(bubbleX + 20, bubbleY + bubbleHeight);
-    ctx.lineTo(bubbleX + 30, bubbleY + bubbleHeight + 10);
-    ctx.lineTo(bubbleX + 40, bubbleY + bubbleHeight);
-    ctx.fill();
-
-    // Text
-    ctx.fillStyle = "#1f2937";
-    ctx.font = "9px monospace";
-    ctx.textAlign = "left";
-    ctx.fillText(speechBubbleText, bubbleX + 10, bubbleY + 18);
-  }
-
-  function drawStatusIndicator() {
-    if (!ctx) return;
-
-    // Status text at bottom
-    const statusText = isRunning 
-      ? `Phase ${currentPhase + 1}/${totalPhases}: ${RESEARCH_PHASES[currentPhase]?.name || "Processing"}`
-      : "Ready to start research";
-
-    ctx.fillStyle = "#9ca3af";
-    ctx.font = "10px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText(statusText, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 10);
-
-    // Running indicator
-    if (isRunning) {
-      const dotX = CANVAS_WIDTH / 2 - 100;
-      const dotY = CANVAS_HEIGHT - 12;
-      ctx.fillStyle = "#22c55e";
-      ctx.globalAlpha = Math.sin(frameCount * 0.1) * 0.5 + 0.5;
-      ctx.beginPath();
-      ctx.arc(dotX, dotY, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
+        // Agent name below
+        c.fillStyle = pos.isActive ? "#ffffff" : "#9ca3af";
+        c.font = "8px monospace";
+        c.textAlign = "center";
+        c.fillText(agent.name, pos.x + 16, pos.y + 45);
+      });
     }
-  }
+
+    function drawSpeechBubble(agentIndex: number) {
+      if (!ctx || agentIndex < 0 || !speechBubbleText) return;
+      const c = ctx; // Store in local variable for TypeScript
+
+      const pos = agentPositions[agentIndex];
+      const bubbleX = pos.x - 20;
+      const bubbleY = pos.y - 50;
+      const bubbleWidth = Math.min(speechBubbleText.length * 6 + 20, 150);
+      const bubbleHeight = 30;
+
+      // Bubble background
+      c.fillStyle = "#ffffff";
+      c.beginPath();
+      c.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 8);
+      c.fill();
+
+      // Bubble tail
+      c.beginPath();
+      c.moveTo(bubbleX + 20, bubbleY + bubbleHeight);
+      c.lineTo(bubbleX + 30, bubbleY + bubbleHeight + 10);
+      c.lineTo(bubbleX + 40, bubbleY + bubbleHeight);
+      c.fill();
+
+      // Text
+      c.fillStyle = "#1f2937";
+      c.font = "9px monospace";
+      c.textAlign = "left";
+      c.fillText(speechBubbleText, bubbleX + 10, bubbleY + 18);
+    }
+
+    function drawStatusIndicator() {
+      if (!ctx) return;
+      const c = ctx; // Store in local variable for TypeScript
+
+      // Status text at bottom
+      const statusText = isRunning 
+        ? `Phase ${currentPhase + 1}/${totalPhases}: ${RESEARCH_PHASES[currentPhase]?.name || "Processing"}`
+        : "Ready to start research";
+
+      c.fillStyle = "#9ca3af";
+      c.font = "10px monospace";
+      c.textAlign = "center";
+      c.fillText(statusText, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 10);
+
+      // Running indicator
+      if (isRunning) {
+        const dotX = CANVAS_WIDTH / 2 - 100;
+        const dotY = CANVAS_HEIGHT - 12;
+        c.fillStyle = "#22c55e";
+        c.globalAlpha = Math.sin(frameCount * 0.1) * 0.5 + 0.5;
+        c.beginPath();
+        c.arc(dotX, dotY, 4, 0, Math.PI * 2);
+        c.fill();
+        c.globalAlpha = 1;
+      }
+    }
 </script>
 
 <div class="pixel-lab-container">
