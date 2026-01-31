@@ -55,6 +55,42 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Version endpoint
+app.get("/version", (req, res) => {
+  res.json({
+    version: "1.0.0",
+    name: "ai-grant-crawler-backend",
+    buildTime: process.env.BUILD_TIME || new Date().toISOString(),
+    nodeVersion: process.version,
+    environment: env.nodeEnv,
+  });
+});
+
+// Metrics endpoint (basic)
+const startTime = Date.now();
+let requestCount = 0;
+app.use((req, res, next) => {
+  requestCount++;
+  next();
+});
+
+app.get("/metrics", (req, res) => {
+  const uptime = Math.floor((Date.now() - startTime) / 1000);
+  const memoryUsage = process.memoryUsage();
+  
+  res.json({
+    uptime: uptime,
+    uptimeFormatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${uptime % 60}s`,
+    requestCount: requestCount,
+    memory: {
+      heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024) + " MB",
+      heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024) + " MB",
+      rss: Math.round(memoryUsage.rss / 1024 / 1024) + " MB",
+    },
+    environment: env.nodeEnv,
+  });
+});
+
 // API routes
 app.use("/api/grants", grantsRouter);
 app.use("/api/crawler", crawlerRouter);

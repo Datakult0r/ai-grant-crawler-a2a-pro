@@ -41,10 +41,11 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 
 ### 2.3 Known Issues
 
-- [ ] Merge conflict in README.md (fixed in this branch)
-- [ ] PRs #10-18 not yet merged to main
-- [ ] No production deployment
-- [ ] Team page uses demo data (needs auth integration)
+- [x] Merge conflict in README.md (fixed)
+- [x] PRs #10-33 merged to main
+- [ ] Production deployment pending (backend to Fly.io, frontend to Vercel)
+- [ ] Team page uses demo data (needs auth integration for real users)
+- [ ] Automated tests not yet implemented (no test framework configured)
 
 ---
 
@@ -106,10 +107,10 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 **Description**: Implement user authentication to enable multi-tenant usage.
 
 **Tasks**:
-- [ ] Integrate Supabase Auth
-- [ ] Add login/signup pages
-- [ ] Protect API routes with auth middleware
-- [ ] Connect Team page to real user data
+- [x] Integrate Supabase Auth (auth store, middleware implemented)
+- [x] Add login/signup pages (functional with Supabase)
+- [x] Protect API routes with auth middleware (authMiddleware, optionalAuthMiddleware)
+- [ ] Connect Team page to real user data (currently uses demo data)
 - [ ] Add user profile settings
 - [ ] Implement role-based access (admin, user)
 
@@ -118,19 +119,19 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 **Description**: Allow users to configure and manage grant sources.
 
 **Tasks**:
-- [ ] Create admin UI for grant sources
-- [ ] Implement source enable/disable toggle
-- [ ] Add custom source URL input
-- [ ] Configure scraping frequency per source
-- [ ] Add source health monitoring
+- [x] Create admin UI for grant sources (/admin/sources page with AdminGrantSources component)
+- [x] Implement source enable/disable toggle (PATCH /api/admin/sources/:id)
+- [x] Add custom source URL input (POST /api/admin/sources)
+- [x] Configure scraping frequency per source (hourly/daily/weekly/monthly)
+- [x] Add source health monitoring (GET /api/admin/sources/stats)
 
 #### 2.3 Proposal Export & Formatting
 **Effort**: 2-3 hours  
 **Description**: Enable exporting proposals in multiple formats.
 
 **Tasks**:
-- [ ] PDF export with professional formatting
-- [ ] Word document export (.docx)
+- [x] PDF export with professional formatting (pdfkit integration)
+- [x] Word document export (.docx) (docx library integration)
 - [ ] LaTeX export for academic submissions
 - [ ] Custom template support
 - [ ] Include charts and visualizations
@@ -140,7 +141,7 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 **Description**: Make the tracker kanban board fully interactive.
 
 **Tasks**:
-- [ ] Implement drag-and-drop between columns
+- [x] Implement drag-and-drop between columns (with optimistic UI updates)
 - [ ] Add inline editing for proposal details
 - [ ] Add deadline reminders
 - [ ] Implement filtering and search
@@ -299,7 +300,74 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 
 ---
 
-## 7. Appendix
+## 7. Remaining Rough Edges
+
+The following items are known limitations or areas that need attention before full production readiness:
+
+### 7.1 Authentication & Authorization
+- Team page still uses demo data instead of real Supabase users
+- Role-based access control (admin vs user) not yet implemented
+- User profile settings page not implemented
+
+### 7.2 Testing
+- No automated test framework configured (Jest/Vitest for backend, Playwright for frontend)
+- End-to-end tests not implemented
+- API integration tests not implemented
+
+### 7.3 Production Deployment
+- Backend deployment to Railway/Fly.io pending (requires Supabase credentials)
+- Vercel frontend needs PUBLIC_API_URL configured to point to deployed backend
+- Seed script needs to be run on production database
+
+### 7.4 Feature Gaps
+- LaTeX export for academic submissions not implemented
+- Custom proposal templates not supported
+- Inline editing for tracker kanban cards not implemented
+- Bulk actions (archive, delete) for tracker not implemented
+
+### 7.5 Monitoring & Observability
+- Error tracking (Sentry) not integrated
+- Cost tracking per AI call not implemented
+- API usage analytics not implemented
+
+---
+
+## 8. Phase 3 Ideas (Do Not Start Without Approval)
+
+The following features are candidates for Phase 3 development but should NOT be started without explicit user approval:
+
+### 8.1 Real-time Collaboration
+- WebSocket-based collaborative editing
+- Presence indicators showing who's viewing/editing
+- Cursor sharing for simultaneous editing
+- Conflict resolution for concurrent edits
+
+### 8.2 Advanced AI Features
+- Fine-tuned models for grant writing
+- RAG (Retrieval Augmented Generation) with past successful proposals
+- Automatic grant matching based on organization profile
+- AI-powered budget generation
+
+### 8.3 Integrations
+- Calendar integration (Google Calendar, Outlook) for deadline reminders
+- Slack/Teams notifications
+- CRM integration (Salesforce, HubSpot)
+- Document storage integration (Google Drive, Dropbox)
+
+### 8.4 Mobile Experience
+- Progressive Web App (PWA) support
+- Mobile-optimized views
+- Push notifications for deadlines
+
+### 8.5 Enterprise Features
+- SSO (SAML, OIDC) authentication
+- Audit logging
+- Custom branding/white-labeling
+- Multi-tenant organization support
+
+---
+
+## 9. Appendix
 
 ### 7.1 API Endpoints
 

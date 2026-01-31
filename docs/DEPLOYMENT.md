@@ -7,12 +7,11 @@ This guide covers deploying the AI Grant Crawler application to production.
 The application consists of two main components:
 
 1. **Frontend** (SvelteKit) - Deployed to Vercel (automatic via GitHub integration)
-2. **Backend** (Node.js/Express) - Deployed to Fly.io (manual setup required)
+2. **Backend** (Node.js/Express) - Deployed to Railway or Fly.io
 
 ## Prerequisites
 
-- [Fly.io CLI](https://fly.io/docs/hands-on/install-flyctl/) installed
-- Fly.io account created
+- Railway account OR [Fly.io CLI](https://fly.io/docs/hands-on/install-flyctl/) installed
 - Supabase project with database schema applied
 - API keys for Gemini (required) and OpenRouter (optional)
 
@@ -28,7 +27,46 @@ Set these in your Vercel project settings:
 PUBLIC_API_URL=https://your-backend.fly.dev/api
 ```
 
-## Backend Deployment (Fly.io)
+## Backend Deployment (Railway) - Recommended
+
+Railway is the recommended deployment platform for the backend. A `railway.json` configuration file is already included.
+
+### 1. Connect Repository
+
+1. Go to [Railway Dashboard](https://railway.app/dashboard)
+2. Click "New Project" > "Deploy from GitHub repo"
+3. Select `Datakult0r/ai-grant-crawler-a2a-pro`
+4. Choose the `backend` directory as the root
+
+### 2. Set Environment Variables
+
+In Railway Dashboard > Project > Variables:
+
+```
+# Required
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+GEMINI_API_KEY=your-gemini-key
+PORT=3000
+
+# Optional
+OPENROUTER_API_KEY=your-openrouter-key
+LOW_COST_MODE=true
+AI_RESEARCHER_ENABLED=false
+IS_DEMO=false
+```
+
+### 3. Deploy
+
+Railway will automatically deploy when you push to the connected branch. You can also trigger manual deploys from the dashboard.
+
+### 4. Get Your Backend URL
+
+After deployment, Railway provides a URL like `https://your-app.up.railway.app`. Use this for the frontend's `PUBLIC_API_URL`.
+
+---
+
+## Backend Deployment (Fly.io) - Alternative
 
 ### 1. Install Fly CLI
 
@@ -130,9 +168,23 @@ Access your app's metrics and logs at: https://fly.io/apps/your-app-name
 
 ### Health Check
 
-The backend exposes a `/health` endpoint that returns:
-- Database connectivity status
-- API key configuration status
+The backend exposes several monitoring endpoints:
+
+**`/health`** - Basic health check
+- Returns: `{ status: "ok", timestamp, environment }`
+
+**`/version`** - Application version info
+- Returns: `{ version, name, buildTime, nodeVersion, environment }`
+
+**`/metrics`** - Runtime metrics
+- Returns: `{ uptime, uptimeFormatted, requestCount, memory: { heapUsed, heapTotal, rss }, environment }`
+
+Example:
+```bash
+curl https://your-app.fly.dev/health
+curl https://your-app.fly.dev/version
+curl https://your-app.fly.dev/metrics
+```
 
 ## Troubleshooting
 
