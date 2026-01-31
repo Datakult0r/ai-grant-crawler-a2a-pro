@@ -26,7 +26,7 @@ export async function authMiddleware(req, res, next) {
 
 export function optionalAuthMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         req.user = null;
         return next();
@@ -47,4 +47,39 @@ export function optionalAuthMiddleware(req, res, next) {
             req.user = null;
             next();
         });
+}
+
+export async function requireAdminMiddleware(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+
+        if (error || !user) {
+            return res.status(401).json({ error: 'Invalid or expired token' });
+        }
+
+        // Check if user has admin role
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError || !profile || profile.role !== 'admin') {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error('Admin middleware error:', error);
+        return res.status(500).json({ error: 'Authentication failed' });
+    }
 }

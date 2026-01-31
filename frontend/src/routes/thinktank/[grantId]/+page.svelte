@@ -21,7 +21,6 @@
   import { Badge } from "$lib/components/ui/badge";
   import { fetchGrants, generateProposal } from "$lib/api";
   import { goto } from "$app/navigation";
-    import ResearchVisualization from "$lib/components/ResearchVisualization.svelte";
     import ResearchProgress from "$lib/components/ResearchProgress.svelte";
     import PixelLabVisualization from "$lib/components/PixelLabVisualization.svelte";
 

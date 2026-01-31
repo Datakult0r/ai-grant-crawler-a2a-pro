@@ -1,18 +1,15 @@
 import express from 'express';
 import { supabase } from '../config/database.js';
 import { sendEmail, createDeadlineAlertEmail, createNewGrantAlertEmail, createWeeklyDigestEmail } from '../services/emailService.js';
+import { validateEmailField, requireFields, validateEnum } from '../middleware/validation.js';
 import crypto from 'crypto';
 
 const router = express.Router();
 
 // Subscribe to notifications - stores in Supabase
-router.post('/subscribe', async (req, res) => {
+router.post('/subscribe', validateEmailField('email'), async (req, res) => {
   try {
     const { email, preferences } = req.body;
-    
-    if (!email || !email.includes('@')) {
-      return res.status(400).json({ error: 'Valid email required' });
-    }
 
     // Generate unique unsubscribe token
     const unsubscribeToken = crypto.randomUUID();
@@ -177,7 +174,11 @@ router.get('/admin/subscribers', async (req, res) => {
 });
 
 // Admin: Send test notification (protected)
-router.post('/admin/test', async (req, res) => {
+router.post('/admin/test',
+  requireFields('email', 'type'),
+  validateEmailField('email'),
+  validateEnum('type', ['deadline', 'newGrant', 'digest']),
+  async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -186,16 +187,12 @@ router.post('/admin/test', async (req, res) => {
 
     const token = authHeader.split(' ')[1];
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       return res.status(401).json({ error: 'Invalid authentication token' });
     }
 
     const { email, type } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({ error: 'Email required' });
-    }
 
     // Create test content based on type
     const testGrant = {
@@ -248,9 +245,23 @@ router.post('/trigger/deadlines', async (req, res) => {
     // Verify internal call or admin auth
     const authHeader = req.headers.authorization;
     const internalKey = req.headers['x-internal-key'];
-    
-    if (internalKey !== process.env.INTERNAL_API_KEY && !authHeader) {
-      return res.status(401).json({ error: 'Unauthorized' });
+
+    // Validate internal key if provided
+    if (internalKey) {
+      if (internalKey !== process.env.INTERNAL_API_KEY) {
+        return res.status(401).json({ error: 'Invalid internal key' });
+      }
+    } else if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Otherwise validate auth token
+      const token = authHeader.split(' ')[1];
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+      if (authError || !user) {
+        return res.status(401).json({ error: 'Invalid authentication token' });
+      }
+    } else {
+      // Neither internal key nor valid auth header provided
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     // Get active subscribers who want deadline notifications
