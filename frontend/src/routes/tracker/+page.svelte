@@ -184,13 +184,15 @@
     <!-- Kanban Board -->
     <div class="grid grid-cols-5 gap-4">
       {#each columns as column}
-        <div 
-          class="space-y-4"
-          data-column={column.id}
-          ondragover={(e) => handleDragOver(e, column.id)}
-          ondragleave={handleDragLeave}
-          ondrop={(e) => handleDrop(e, column.id)}
-        >
+                <div 
+                  class="space-y-4"
+                  role="region"
+                  aria-label="{column.title} column"
+                  data-column={column.id}
+                  ondragover={(e) => handleDragOver(e, column.id)}
+                  ondragleave={handleDragLeave}
+                  ondrop={(e) => handleDrop(e, column.id)}
+                >
           <!-- Column Header -->
           <Card class="glass-card {column.color} {dragOverColumn === column.id ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}">
             <CardHeader class="p-4">
