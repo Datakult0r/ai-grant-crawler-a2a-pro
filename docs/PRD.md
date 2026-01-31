@@ -300,7 +300,74 @@ AI Grant Crawler A2A Pro is a production-ready autonomous grant discovery and pr
 
 ---
 
-## 7. Appendix
+## 7. Remaining Rough Edges
+
+The following items are known limitations or areas that need attention before full production readiness:
+
+### 7.1 Authentication & Authorization
+- Team page still uses demo data instead of real Supabase users
+- Role-based access control (admin vs user) not yet implemented
+- User profile settings page not implemented
+
+### 7.2 Testing
+- No automated test framework configured (Jest/Vitest for backend, Playwright for frontend)
+- End-to-end tests not implemented
+- API integration tests not implemented
+
+### 7.3 Production Deployment
+- Backend deployment to Railway/Fly.io pending (requires Supabase credentials)
+- Vercel frontend needs PUBLIC_API_URL configured to point to deployed backend
+- Seed script needs to be run on production database
+
+### 7.4 Feature Gaps
+- LaTeX export for academic submissions not implemented
+- Custom proposal templates not supported
+- Inline editing for tracker kanban cards not implemented
+- Bulk actions (archive, delete) for tracker not implemented
+
+### 7.5 Monitoring & Observability
+- Error tracking (Sentry) not integrated
+- Cost tracking per AI call not implemented
+- API usage analytics not implemented
+
+---
+
+## 8. Phase 3 Ideas (Do Not Start Without Approval)
+
+The following features are candidates for Phase 3 development but should NOT be started without explicit user approval:
+
+### 8.1 Real-time Collaboration
+- WebSocket-based collaborative editing
+- Presence indicators showing who's viewing/editing
+- Cursor sharing for simultaneous editing
+- Conflict resolution for concurrent edits
+
+### 8.2 Advanced AI Features
+- Fine-tuned models for grant writing
+- RAG (Retrieval Augmented Generation) with past successful proposals
+- Automatic grant matching based on organization profile
+- AI-powered budget generation
+
+### 8.3 Integrations
+- Calendar integration (Google Calendar, Outlook) for deadline reminders
+- Slack/Teams notifications
+- CRM integration (Salesforce, HubSpot)
+- Document storage integration (Google Drive, Dropbox)
+
+### 8.4 Mobile Experience
+- Progressive Web App (PWA) support
+- Mobile-optimized views
+- Push notifications for deadlines
+
+### 8.5 Enterprise Features
+- SSO (SAML, OIDC) authentication
+- Audit logging
+- Custom branding/white-labeling
+- Multi-tenant organization support
+
+---
+
+## 9. Appendix
 
 ### 7.1 API Endpoints
 
