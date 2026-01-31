@@ -229,3 +229,19 @@ export async function sendEmail(to, subject, html) {
     return { success: false, error: err.message };
   }
 }
+
+// Wrapper functions for notification scheduler
+export async function notifyDeadlineApproaching(email, grant, daysRemaining, unsubscribeToken = 'default') {
+  const { subject, html } = createDeadlineAlertEmail(grant, daysRemaining, unsubscribeToken);
+  return sendEmail(email, subject, html);
+}
+
+export async function notifyNewHighRelevanceGrant(email, grant, unsubscribeToken = 'default') {
+  const { subject, html } = createNewGrantAlertEmail([grant], unsubscribeToken);
+  return sendEmail(email, subject, html);
+}
+
+export async function sendWeeklyDigest(email, grants, proposals, stats, unsubscribeToken = 'default') {
+  const { subject, html } = createWeeklyDigestEmail(stats, grants.slice(0, 5), unsubscribeToken);
+  return sendEmail(email, subject, html);
+}
