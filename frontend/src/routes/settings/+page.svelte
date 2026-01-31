@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { Settings, Cpu, DollarSign, Clock, Zap, Brain, Code, BookOpen, FlaskConical, GraduationCap, Users, Check, RefreshCw, Loader2, ChevronDown, ChevronUp } from 'lucide-svelte';
 
@@ -6,8 +6,8 @@
 
   let loading = $state(true);
   let saving = $state(false);
-  let error = $state(null);
-  let successMessage = $state(null);
+  let error = $state<string | null>(null);
+  let successMessage = $state<string | null>(null);
   
   let availableModels = $state({});
   let agentRoles = $state({});
@@ -60,9 +60,9 @@
       
       // Initialize custom models from current config
       customModels = { ...currentData.models };
-    } catch (err) {
-      error = err.message;
-      // Use demo data if API fails
+        } catch (err) {
+          error = err instanceof Error ? err.message : String(err);
+          // Use demo data if API fails
       availableModels = {
         'gemini-3-pro': { name: 'Gemini 3 Pro', provider: 'Google', costPer1kTokens: 0, quality: 'high' },
         'claude-opus-4.5': { name: 'Claude Opus 4.5', provider: 'Anthropic', costPer1kTokens: 0.015, quality: 'premium' },
@@ -79,22 +79,23 @@
     }
   }
 
-  async function selectPreset(presetKey) {
-    selectedPreset = presetKey;
-    showAdvanced = false;
+    async function selectPreset(presetKey: string) {
+      selectedPreset = presetKey;
+      showAdvanced = false;
     
-    if (presets[presetKey]) {
-      customModels = { ...presets[presetKey].models };
+      const preset = presets[presetKey as keyof typeof presets];
+      if (preset && 'models' in preset) {
+        customModels = { ...(preset as { models: Record<string, string> }).models };
+      }
+    
+      await estimateCost();
     }
-    
-    await estimateCost();
-  }
 
-  async function updateCustomModel(role, modelId) {
-    customModels[role] = modelId;
-    selectedPreset = 'custom';
-    await estimateCost();
-  }
+    async function updateCustomModel(role: string, modelId: string) {
+      customModels[role] = modelId;
+      selectedPreset = 'custom';
+      await estimateCost();
+    }
 
   async function estimateCost() {
     try {
@@ -135,38 +136,38 @@
       successMessage = 'Settings saved successfully!';
       setTimeout(() => successMessage = null, 3000);
       
-      // Refresh current config
-      await fetchData();
-    } catch (err) {
-      error = err.message;
-    } finally {
-      saving = false;
-    }
-  }
-
-  async function resetToDefault() {
-    saving = true;
-    error = null;
-    
-    try {
-      const res = await fetch(`${API_URL}/settings/reset`, {
-        method: 'POST'
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to reset settings');
+        // Refresh current config
+        await fetchData();
+      } catch (err) {
+        error = err instanceof Error ? err.message : String(err);
+      } finally {
+        saving = false;
       }
-
-      successMessage = 'Settings reset to low-cost mode';
-      setTimeout(() => successMessage = null, 3000);
-      
-      await fetchData();
-    } catch (err) {
-      error = err.message;
-    } finally {
-      saving = false;
     }
-  }
+
+    async function resetToDefault() {
+      saving = true;
+      error = null;
+    
+      try {
+        const res = await fetch(`${API_URL}/settings/reset`, {
+          method: 'POST'
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to reset settings');
+        }
+
+        successMessage = 'Settings reset to low-cost mode';
+        setTimeout(() => successMessage = null, 3000);
+      
+        await fetchData();
+      } catch (err) {
+        error = err instanceof Error ? err.message : String(err);
+      } finally {
+        saving = false;
+      }
+    }
 
   onMount(() => {
     fetchData();
