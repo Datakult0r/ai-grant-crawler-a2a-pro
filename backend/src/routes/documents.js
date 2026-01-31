@@ -1,5 +1,7 @@
 import express from "express";
 import { supabase } from "../config/supabase.js";
+import PDFDocument from "pdfkit";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from "docx";
 
 const router = express.Router();
 
@@ -212,6 +214,245 @@ router.get("/:id/download", async (req, res) => {
   } catch (error) {
     console.error("Document download error:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/documents/:id/export/pdf - Export document as PDF
+router.get("/:id/export/pdf", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data: proposal, error } = await supabase
+      .from("proposals")
+      .select(`
+        id,
+        mode,
+        executive_summary,
+        full_proposal,
+        budget,
+        timeline,
+        grants (name, source, funding_amount, deadline)
+      `)
+      .eq("id", id)
+      .single();
+
+    if (error || !proposal) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+
+    const grant = proposal.grants || {};
+    const filename = `Proposal_${grant.name || "Grant"}_${proposal.mode}.pdf`.replace(/\s+/g, "_");
+
+    const doc = new PDFDocument({ margin: 50 });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+    doc.pipe(res);
+
+    doc.fontSize(24).font("Helvetica-Bold").text("Grant Proposal", { align: "center" });
+    doc.moveDown(0.5);
+    doc.fontSize(18).font("Helvetica").text(grant.name || "Unknown Grant", { align: "center" });
+    doc.moveDown(2);
+
+    doc.fontSize(11).font("Helvetica");
+    doc.text(`Source: ${grant.source || "N/A"}`);
+    doc.text(`Funding Amount: ${grant.funding_amount || "TBD"}`);
+    doc.text(`Deadline: ${grant.deadline ? new Date(grant.deadline).toLocaleDateString() : "TBD"}`);
+    doc.text(`Generation Mode: ${proposal.mode === "fast" ? "Fast Track" : "Research Track"}`);
+    doc.moveDown();
+
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown();
+
+    if (proposal.executive_summary) {
+      doc.fontSize(16).font("Helvetica-Bold").text("Executive Summary");
+      doc.moveDown(0.5);
+      doc.fontSize(11).font("Helvetica").text(proposal.executive_summary, { align: "justify" });
+      doc.moveDown();
+    }
+
+    if (proposal.full_proposal) {
+      doc.fontSize(16).font("Helvetica-Bold").text("Full Proposal");
+      doc.moveDown(0.5);
+      doc.fontSize(11).font("Helvetica").text(proposal.full_proposal, { align: "justify" });
+      doc.moveDown();
+    }
+
+    if (proposal.budget) {
+      doc.fontSize(16).font("Helvetica-Bold").text("Budget");
+      doc.moveDown(0.5);
+      doc.fontSize(11).font("Helvetica").text(proposal.budget, { align: "justify" });
+      doc.moveDown();
+    }
+
+    if (proposal.timeline) {
+      doc.fontSize(16).font("Helvetica-Bold").text("Timeline");
+      doc.moveDown(0.5);
+      doc.fontSize(11).font("Helvetica").text(proposal.timeline, { align: "justify" });
+    }
+
+    doc.end();
+  } catch (error) {
+    console.error("PDF export error:", error);
+    res.status(500).json({ error: "Failed to generate PDF" });
+  }
+});
+
+// GET /api/documents/:id/export/docx - Export document as Word
+router.get("/:id/export/docx", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data: proposal, error } = await supabase
+      .from("proposals")
+      .select(`
+        id,
+        mode,
+        executive_summary,
+        full_proposal,
+        budget,
+        timeline,
+        grants (name, source, funding_amount, deadline)
+      `)
+      .eq("id", id)
+      .single();
+
+    if (error || !proposal) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+
+    const grant = proposal.grants || {};
+    const filename = `Proposal_${grant.name || "Grant"}_${proposal.mode}.docx`.replace(/\s+/g, "_");
+
+    const children = [];
+
+    children.push(
+      new Paragraph({
+        text: "Grant Proposal",
+        heading: HeadingLevel.TITLE,
+        alignment: AlignmentType.CENTER,
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        text: grant.name || "Unknown Grant",
+        heading: HeadingLevel.HEADING_1,
+        alignment: AlignmentType.CENTER,
+      })
+    );
+
+    children.push(new Paragraph({ text: "" }));
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Source: ", bold: true }),
+          new TextRun({ text: grant.source || "N/A" }),
+        ],
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Funding Amount: ", bold: true }),
+          new TextRun({ text: grant.funding_amount || "TBD" }),
+        ],
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Deadline: ", bold: true }),
+          new TextRun({ text: grant.deadline ? new Date(grant.deadline).toLocaleDateString() : "TBD" }),
+        ],
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Generation Mode: ", bold: true }),
+          new TextRun({ text: proposal.mode === "fast" ? "Fast Track" : "Research Track" }),
+        ],
+      })
+    );
+
+    children.push(new Paragraph({ text: "" }));
+
+    children.push(
+      new Paragraph({
+        border: {
+          bottom: { color: "000000", space: 1, style: BorderStyle.SINGLE, size: 6 },
+        },
+      })
+    );
+
+    children.push(new Paragraph({ text: "" }));
+
+    if (proposal.executive_summary) {
+      children.push(
+        new Paragraph({
+          text: "Executive Summary",
+          heading: HeadingLevel.HEADING_2,
+        })
+      );
+      children.push(new Paragraph({ text: proposal.executive_summary }));
+      children.push(new Paragraph({ text: "" }));
+    }
+
+    if (proposal.full_proposal) {
+      children.push(
+        new Paragraph({
+          text: "Full Proposal",
+          heading: HeadingLevel.HEADING_2,
+        })
+      );
+      children.push(new Paragraph({ text: proposal.full_proposal }));
+      children.push(new Paragraph({ text: "" }));
+    }
+
+    if (proposal.budget) {
+      children.push(
+        new Paragraph({
+          text: "Budget",
+          heading: HeadingLevel.HEADING_2,
+        })
+      );
+      children.push(new Paragraph({ text: proposal.budget }));
+      children.push(new Paragraph({ text: "" }));
+    }
+
+    if (proposal.timeline) {
+      children.push(
+        new Paragraph({
+          text: "Timeline",
+          heading: HeadingLevel.HEADING_2,
+        })
+      );
+      children.push(new Paragraph({ text: proposal.timeline }));
+    }
+
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: children,
+        },
+      ],
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error("DOCX export error:", error);
+    res.status(500).json({ error: "Failed to generate Word document" });
   }
 });
 

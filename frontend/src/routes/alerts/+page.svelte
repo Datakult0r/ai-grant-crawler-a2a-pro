@@ -12,16 +12,17 @@
   let error = $state<string | null>(null);
   let alertsData = $state<AlertsResponse | null>(null);
 
-  // Computed alerts list (all alerts combined and sorted)
-  let alerts = $derived<Alert[]>(() => {
-    if (!alertsData) return [];
-    return [
-      ...alertsData.urgent,
-      ...alertsData.warning,
-      ...alertsData.info,
-      ...alertsData.completed
-    ];
-  });
+    // Computed alerts list (all alerts combined and sorted)
+    let alerts = $derived<Alert[]>(
+      alertsData 
+        ? [
+            ...alertsData.urgent,
+            ...alertsData.warning,
+            ...alertsData.info,
+            ...alertsData.completed
+          ]
+        : []
+    );
 
   // Stats from API
   let stats = $derived({

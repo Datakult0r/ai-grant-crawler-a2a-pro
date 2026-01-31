@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { FileText, Download, RefreshCw, CheckCircle2, Loader2 } from 'lucide-svelte';
+  import { FileText, Download, RefreshCw, CheckCircle2, Loader2, FileDown, ChevronDown } from 'lucide-svelte';
   import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '$lib/components/ui/card';
   import { Button } from '$lib/components/ui/button';
   import { Badge } from '$lib/components/ui/badge';
   import { onMount } from 'svelte';
-  import { fetchDocuments, downloadDocument } from '$lib/api';
+  import { fetchDocuments, downloadDocument, exportDocumentPdf, exportDocumentDocx } from '$lib/api';
 
   let documentTypes = $state([
     {
@@ -64,6 +64,9 @@
     }
   });
 
+  let exporting = $state<number | null>(null);
+  let showExportMenu = $state<number | null>(null);
+
   async function handleDownload(docId: number, docName: string) {
     try {
       const blob = await downloadDocument(docId);
@@ -76,6 +79,46 @@
     } catch (e) {
       console.error('Failed to download document:', e);
     }
+  }
+
+  async function handleExportPdf(docId: number, docName: string) {
+    exporting = docId;
+    showExportMenu = null;
+    try {
+      const blob = await exportDocumentPdf(docId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = docName.replace(/\.\w+$/, '.pdf');
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to export PDF:', e);
+    } finally {
+      exporting = null;
+    }
+  }
+
+  async function handleExportDocx(docId: number, docName: string) {
+    exporting = docId;
+    showExportMenu = null;
+    try {
+      const blob = await exportDocumentDocx(docId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = docName.replace(/\.\w+$/, '.docx');
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to export Word document:', e);
+    } finally {
+      exporting = null;
+    }
+  }
+
+  function toggleExportMenu(docId: number) {
+    showExportMenu = showExportMenu === docId ? null : docId;
   }
 </script>
 
@@ -156,9 +199,43 @@
                 </div>
               </div>
             </div>
-            <Button size="sm" variant="ghost" class="hover:bg-primary/10">
-              <Download class="w-4 h-4" />
-            </Button>
+            <div class="flex items-center gap-2">
+              {#if exporting === doc.id}
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 class="w-4 h-4 animate-spin" />
+                  Exporting...
+                </div>
+              {:else}
+                <Button size="sm" variant="ghost" class="hover:bg-primary/10" onclick={() => handleDownload(doc.id, doc.name)}>
+                  <Download class="w-4 h-4" />
+                </Button>
+                <div class="relative">
+                  <Button size="sm" variant="outline" class="border-primary/30 hover:bg-primary/10" onclick={() => toggleExportMenu(doc.id)}>
+                    <FileDown class="w-4 h-4 mr-1" />
+                    Export
+                    <ChevronDown class="w-3 h-3 ml-1" />
+                  </Button>
+                  {#if showExportMenu === doc.id}
+                    <div class="absolute right-0 top-full mt-1 bg-background border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
+                      <button 
+                        class="w-full px-4 py-2 text-left text-sm hover:bg-muted/50 rounded-t-lg flex items-center gap-2"
+                        onclick={() => handleExportPdf(doc.id, doc.name)}
+                      >
+                        <FileText class="w-4 h-4 text-red-500" />
+                        Export as PDF
+                      </button>
+                      <button 
+                        class="w-full px-4 py-2 text-left text-sm hover:bg-muted/50 rounded-b-lg flex items-center gap-2"
+                        onclick={() => handleExportDocx(doc.id, doc.name)}
+                      >
+                        <FileText class="w-4 h-4 text-blue-500" />
+                        Export as Word
+                      </button>
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+            </div>
           </div>
         {/each}
       </div>

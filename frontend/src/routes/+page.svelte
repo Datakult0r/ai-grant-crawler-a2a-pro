@@ -316,25 +316,25 @@
     </Card>
   {/if}
 
-  <!-- Grants Grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    {#each filteredGrants as grant}
-      <Card
-        class="glass-card hover:border-primary/50 transition-all duration-300 group"
-      >
-        <CardHeader>
-          <div class="flex items-start justify-between gap-4">
-            <div class="space-y-2 flex-1">
-              <CardTitle
-                class="text-lg group-hover:text-primary transition-colors"
-              >
-                {grant.name}
-              </CardTitle>
-              <div class="flex gap-2">
-                {@const colors = getSourceColors(grant.source)}
-                <Badge variant="outline" class="{colors.border} {colors.text} {colors.bg}">
-                  {grant.source}
-                </Badge>
+    <!-- Grants Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {#each filteredGrants as grant}
+        {@const colors = getSourceColors(grant.source)}
+        <Card
+          class="glass-card hover:border-primary/50 transition-all duration-300 group"
+        >
+          <CardHeader>
+            <div class="flex items-start justify-between gap-4">
+              <div class="space-y-2 flex-1">
+                <CardTitle
+                  class="text-lg group-hover:text-primary transition-colors"
+                >
+                  {grant.name}
+                </CardTitle>
+                <div class="flex gap-2">
+                  <Badge variant="outline" class="{colors.border} {colors.text} {colors.bg}">
+                    {grant.source}
+                  </Badge>
                 <Badge
                   variant="outline"
                   class="border-secondary/30 text-secondary"

@@ -120,7 +120,6 @@ export async function checkJulesHealth() {
     if (!res.ok) throw new Error('Failed to check Jules health');
     return res.json();
 }
-<<<<<<< HEAD
 
 // Tracker API - Get proposals grouped by status for kanban board
 export async function fetchTracker() {
@@ -168,6 +167,18 @@ export async function fetchDocument(id: number) {
 export async function downloadDocument(id: number) {
     const res = await fetch(`${API_BASE_URL}/documents/${id}/download`);
     if (!res.ok) throw new Error('Failed to download document');
+    return res.blob();
+}
+
+export async function exportDocumentPdf(id: number) {
+    const res = await fetch(`${API_BASE_URL}/documents/${id}/export/pdf`);
+    if (!res.ok) throw new Error('Failed to export PDF');
+    return res.blob();
+}
+
+export async function exportDocumentDocx(id: number) {
+    const res = await fetch(`${API_BASE_URL}/documents/${id}/export/docx`);
+    if (!res.ok) throw new Error('Failed to export Word document');
     return res.blob();
 }
 

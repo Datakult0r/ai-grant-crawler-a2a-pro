@@ -106,15 +106,101 @@ DROP TRIGGER IF EXISTS update_grants_updated_at ON grants;
 CREATE TRIGGER update_grants_updated_at BEFORE UPDATE
 ON grants FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Phase 3: Notification Subscribers (Supabase-persisted, replaces in-memory storage)
+CREATE TABLE IF NOT EXISTS notification_subscribers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  unsubscribe_token TEXT UNIQUE DEFAULT gen_random_uuid()::text,
+  preferences JSONB DEFAULT '{"deadlines": true, "newGrants": true, "weeklyDigest": true, "proposalUpdates": true}',
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Phase 3: User Settings for AI Model Configuration (Supabase-persisted)
+CREATE TABLE IF NOT EXISTS user_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  preset TEXT DEFAULT 'low-cost' CHECK (preset IN ('low-cost', 'balanced', 'premium', 'custom')),
+  custom_models JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id)
+);
+
+-- Indexes for notification_subscribers
+CREATE INDEX IF NOT EXISTS idx_notification_subscribers_email ON notification_subscribers(email);
+CREATE INDEX IF NOT EXISTS idx_notification_subscribers_active ON notification_subscribers(is_active);
+CREATE INDEX IF NOT EXISTS idx_notification_subscribers_token ON notification_subscribers(unsubscribe_token);
+
+-- Index for user_settings
+CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
+
+-- Enable RLS on new tables
+ALTER TABLE notification_subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for notification_subscribers (public subscribe, token-based unsubscribe)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'notification_subscribers' AND policyname = 'Anyone can subscribe'
+    ) THEN
+        CREATE POLICY "Anyone can subscribe" ON notification_subscribers FOR INSERT WITH CHECK (true);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'notification_subscribers' AND policyname = 'Can view own subscription by token'
+    ) THEN
+        CREATE POLICY "Can view own subscription by token" ON notification_subscribers FOR SELECT USING (true);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'notification_subscribers' AND policyname = 'Can update own subscription'
+    ) THEN
+        CREATE POLICY "Can update own subscription" ON notification_subscribers FOR UPDATE USING (true);
+    END IF;
+END
+$$;
+
+-- RLS Policies for user_settings (user-specific)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'user_settings' AND policyname = 'Can view own settings'
+    ) THEN
+        CREATE POLICY "Can view own settings" ON user_settings FOR SELECT USING (auth.uid() = user_id);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'user_settings' AND policyname = 'Can insert own settings'
+    ) THEN
+        CREATE POLICY "Can insert own settings" ON user_settings FOR INSERT WITH CHECK (auth.uid() = user_id);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'user_settings' AND policyname = 'Can update own settings'
+    ) THEN
+        CREATE POLICY "Can update own settings" ON user_settings FOR UPDATE USING (auth.uid() = user_id);
+    END IF;
+END
+$$;
+
 -- Phase 1: Grant Discovery System
 CREATE TABLE IF NOT EXISTS grant_sources (
     id SERIAL PRIMARY KEY,
     url TEXT NOT NULL UNIQUE,
     name TEXT,
-    type TEXT, -- 'portal', 'aggregator', 'direct'
+    type TEXT, -- 'portal', 'aggregator', 'direct', 'manual'
     last_crawled_at TIMESTAMP,
-    status TEXT DEFAULT 'active'
+    status TEXT DEFAULT 'active',
+    scrape_frequency TEXT DEFAULT 'daily', -- 'hourly', 'daily', 'weekly', 'monthly'
+    created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Add scrape_frequency column if it doesn't exist (for existing databases)
+ALTER TABLE grant_sources ADD COLUMN IF NOT EXISTS scrape_frequency TEXT DEFAULT 'daily';
+ALTER TABLE grant_sources ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
 
 -- Grant Discovery columns
 ALTER TABLE grants ADD COLUMN IF NOT EXISTS relevance_score INTEGER DEFAULT 0;
