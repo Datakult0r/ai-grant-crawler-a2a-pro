@@ -95,12 +95,19 @@ class LaboratoryWorkflow:
 
         self.save = True
         self.verbose = True
+        self.guardrails = None 
+        
+        # Initialize agents
         self.reviewers = ReviewersAgent(model=get_agent_model("reviewers"), notes=self.notes, openai_api_key=self.openai_api_key)
         self.phd = PhDStudentAgent(model=get_agent_model("phd_student"), notes=self.notes, max_steps=self.max_steps, openai_api_key=self.openai_api_key)
         self.postdoc = PostdocAgent(model=get_agent_model("postdoc"), notes=self.notes, max_steps=self.max_steps, openai_api_key=self.openai_api_key)
         self.professor = ProfessorAgent(model=get_agent_model("professor"), notes=self.notes, max_steps=self.max_steps, openai_api_key=self.openai_api_key)
         self.ml_engineer = MLEngineerAgent(model=get_agent_model("ml_engineer"), notes=self.notes, max_steps=self.max_steps, openai_api_key=self.openai_api_key)
         self.sw_engineer = SWEngineerAgent(model=get_agent_model("sw_engineer"), notes=self.notes, max_steps=self.max_steps, openai_api_key=self.openai_api_key)
+        
+        # Set up logger
+        from logger import get_logger
+        self.logger = get_logger()
 
 
     def set_model(self, model):
@@ -145,68 +152,106 @@ class LaboratoryWorkflow:
         Loop through all research phases
         @return: None
         """
+        # Configure guardrails if present
+        if self.guardrails:
+            from inference import set_guardrails
+            set_guardrails(self.guardrails)
+            
         for phase, subtasks in self.phases:
             phase_start_time = time.time()  # Start timing the phase
-            if self.verbose: print(f"{'*'*50}\nBeginning phase: {phase}\n{'*'*50}")
+            
+            # Start phase in guardrails
+            if self.guardrails:
+                self.guardrails.start_phase(phase)
+                
+            if self.verbose: 
+                self.logger.info(f"{'*'*50}\nBeginning phase: {phase}\n{'*'*50}")
+                
             for subtask in subtasks:
+                # Check circuit breaker
+                if self.guardrails and self.guardrails.is_circuit_open(subtask):
+                    self.logger.error(f"Circuit breaker open for {subtask}, skipping...", recoverable=False)
+                    continue
+
                 if self.agentRxiv:
-                    if self.verbose: print(f"{'&' * 30}\n[Lab #{self.lab_index} Paper #{self.paper_index}] Beginning subtask: {subtask}\n{'&' * 30}")
+                    if self.verbose: self.logger.info(f"{'&' * 30}\n[Lab #{self.lab_index} Paper #{self.paper_index}] Beginning subtask: {subtask}\n{'&' * 30}")
                 else:
-                    if self.verbose: print(f"{'&'*30}\nBeginning subtask: {subtask}\n{'&'*30}")
-                # if type(self.phase_models) == dict:
-                #     if subtask in self.phase_models:
-                #         self.set_model(self.phase_models[subtask])
-                #     else: self.set_model(f"{DEFAULT_LLM_BACKBONE}")
-                if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "literature review":
-                    repeat = True
-                    while repeat: repeat = self.literature_review()
-                    self.phase_status[subtask] = True
-                if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "plan formulation":
-                    repeat = True
-                    while repeat: repeat = self.plan_formulation()
-                    self.phase_status[subtask] = True
-                if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "data preparation":
-                    repeat = True
-                    while repeat: repeat = self.data_preparation()
-                    self.phase_status[subtask] = True
-                if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "running experiments":
-                    repeat = True
-                    while repeat: repeat = self.running_experiments()
-                    self.phase_status[subtask] = True
-                if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "results interpretation":
-                    repeat = True
-                    while repeat: repeat = self.results_interpretation()
-                    self.phase_status[subtask] = True
-                if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "report writing":
-                    repeat = True
-                    while repeat: repeat = self.report_writing()
-                    self.phase_status[subtask] = True
-                if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "report refinement":
-                    return_to_exp_phase = self.report_refinement()
+                    if self.verbose: self.logger.info(f"{'&'*30}\nBeginning subtask: {subtask}\n{'&'*30}")
 
-                    if not return_to_exp_phase:
-                        if self.save: self.save_state(subtask)
-                        return
-
-                    self.set_agent_attr("second_round", return_to_exp_phase)
-                    self.set_agent_attr("prev_report", copy(self.phd.report))
-                    self.set_agent_attr("prev_exp_results", copy(self.phd.exp_results))
-                    self.set_agent_attr("prev_results_code", copy(self.phd.results_code))
-                    self.set_agent_attr("prev_interpretation", copy(self.phd.interpretation))
-
-                    self.phase_status["plan formulation"] = False
-                    self.phase_status["data preparation"] = False
-                    self.phase_status["running experiments"] = False
-                    self.phase_status["results interpretation"] = False
-                    self.phase_status["report writing"] = False
-                    self.phase_status["report refinement"] = False
-                    self.perform_research()
-                if self.save: self.save_state(subtask)
-                # Calculate and print the duration of the phase
-                phase_end_time = time.time()
-                phase_duration = phase_end_time - phase_start_time
-                print(f"Subtask '{subtask}' completed in {phase_duration:.2f} seconds.")
-                self.statistics_per_phase[subtask]["time"] = phase_duration
+                # Execute subtasks with step tracking
+                try:
+                    if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "literature review":
+                        repeat = True
+                        while repeat: 
+                            if self.guardrails and not self.guardrails.increment_step(subtask): break
+                            repeat = self.literature_review()
+                        self.phase_status[subtask] = True
+                    if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "plan formulation":
+                        repeat = True
+                        while repeat: 
+                            if self.guardrails and not self.guardrails.increment_step(subtask): break
+                            repeat = self.plan_formulation()
+                        self.phase_status[subtask] = True
+                    if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "data preparation":
+                        repeat = True
+                        while repeat: 
+                            if self.guardrails and not self.guardrails.increment_step(subtask): break
+                            repeat = self.data_preparation()
+                        self.phase_status[subtask] = True
+                    if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "running experiments":
+                        repeat = True
+                        while repeat: 
+                            if self.guardrails and not self.guardrails.increment_step(subtask): break
+                            repeat = self.running_experiments()
+                        self.phase_status[subtask] = True
+                    if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "results interpretation":
+                        repeat = True
+                        while repeat: 
+                            if self.guardrails and not self.guardrails.increment_step(subtask): break
+                            repeat = self.results_interpretation()
+                        self.phase_status[subtask] = True
+                    if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "report writing":
+                        repeat = True
+                        while repeat: 
+                            if self.guardrails and not self.guardrails.increment_step(subtask): break
+                            repeat = self.report_writing()
+                        self.phase_status[subtask] = True
+                    if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "report refinement":
+                        return_to_exp_phase = self.report_refinement()
+                        
+                        if not return_to_exp_phase:
+                            if self.save: self.save_state(subtask)
+                            return
+                        
+                        # Reset for next round
+                        self.set_agent_attr("second_round", return_to_exp_phase)
+                        self.set_agent_attr("prev_report", copy(self.phd.report))
+                        self.set_agent_attr("prev_exp_results", copy(self.phd.exp_results))
+                        self.set_agent_attr("prev_results_code", copy(self.phd.results_code))
+                        self.set_agent_attr("prev_interpretation", copy(self.phd.interpretation))
+    
+                        self.phase_status["plan formulation"] = False
+                        self.phase_status["data preparation"] = False
+                        self.phase_status["running experiments"] = False
+                        self.phase_status["results interpretation"] = False
+                        self.phase_status["report writing"] = False
+                        self.phase_status["report refinement"] = False
+                        self.perform_research()
+                        
+                    if self.save: self.save_state(subtask)
+                    
+                    # Calculate and print the duration of the phase
+                    phase_end_time = time.time()
+                    phase_duration = phase_end_time - phase_start_time
+                    self.logger.info(f"Subtask '{subtask}' completed in {phase_duration:.2f} seconds.")
+                    self.statistics_per_phase[subtask]["time"] = phase_duration
+                    
+                except Exception as e:
+                    if self.guardrails:
+                        self.guardrails.record_failure(subtask, str(e))
+                    self.logger.error(f"Error in {subtask}: {str(e)}", recoverable=False)
+                    if not self.except_if_fail:
+                        raise e
 
     def report_refinement(self):
         """

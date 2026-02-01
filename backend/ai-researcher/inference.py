@@ -14,6 +14,14 @@ TOKENS_OUT = dict()
 
 encoding = tiktoken.get_encoding("cl100k_base")
 
+# Global guardrails instance
+_GUARDRAILS = None
+
+def set_guardrails(guardrails_instance):
+    """Set the global guardrails instance."""
+    global _GUARDRAILS
+    _GUARDRAILS = guardrails_instance
+
 # OpenRouter model mappings for maximum quality
 OPENROUTER_MODELS = {
     # Optimal models per agent role
@@ -273,9 +281,26 @@ def query_model(model_str, prompt, system_prompt, openai_api_key=None, gemini_ap
                 if agent_name:
                     log_agent_cost(agent_name, model_str, tokens_in, tokens_out)
                 
+                # Calculate estimated cost
+                cost = sum([costmap_in.get(_, 0)*TOKENS_IN[_] for _ in TOKENS_IN]) + sum([costmap_out.get(_, 0)*TOKENS_OUT[_] for _ in TOKENS_OUT])
+                
+                # Update current call cost
+                current_call_cost = (
+                    (costmap_in.get(model_str, 0) * tokens_in) + 
+                    (costmap_out.get(model_str, 0) * tokens_out)
+                )
+
+                # Check guardrails if configured
+                if _GUARDRAILS:
+                    if not _GUARDRAILS.add_cost(current_call_cost, f"Inference: {model_str}"):
+                        raise Exception(f"Cost limit exceeded: ${_GUARDRAILS.max_cost_usd:.2f}")
+
                 if print_cost:
-                    print(f"Current experiment cost = ${curr_cost_est()}, ** Approximate values, may not reflect true cost")
+                    print(f"Current experiment cost = ${cost}, ** Approximate values, may not reflect true cost")
             except Exception as e:
+                # Re-raise guardrail exceptions
+                if "Cost limit exceeded" in str(e):
+                    raise e
                 if print_cost: print(f"Cost approximation has an error? {e}")
             return answer
         except Exception as e:
