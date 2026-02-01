@@ -33,7 +33,19 @@ const PORT = env.port;
 
 // Security Middleware
 app.use(helmet());
-app.use(cors()); // Configure specific origin in production if needed
+
+// CORS Configuration for Production
+const corsOptions = {
+  origin: [
+    'http://localhost:5173', // Local development
+    'https://ai-grant-crawler-a2a-pro.vercel.app', // Production frontend
+    'https://ai-grant-crawler-a2a-pro-*.vercel.app' // Vercel preview deployments
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(morgan("dev")); // Logging
 
