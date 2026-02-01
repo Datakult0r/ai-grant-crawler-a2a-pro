@@ -6,7 +6,9 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "seed": "node scripts/seed.js",
-    "seed:reset": "node scripts/seed.js --reset"
+    "seed:reset": "node scripts/seed.js --reset",
+    "discover": "node scripts/discover-grants.js",
+    "test:bridge": "cd ai-researcher && python grant_research_bridge.py --grant-data \"{\\\"proposal_id\\\": \\\"test_001\\\", \\\"title\\\": \\\"Test Grant\\\", \\\"description\\\": \\\"Testing workspace isolation\\\"}\""
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

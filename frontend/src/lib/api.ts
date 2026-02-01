@@ -221,3 +221,39 @@ export async function fetchAlerts(): Promise<AlertsResponse> {
     if (!res.ok) throw new Error('Failed to fetch alerts');
     return res.json();
 }
+
+// Search API - Real-time grant discovery (crawls web in real-time)
+export async function searchGrants(keyword: string) {
+    const res = await fetch(`${API_BASE_URL}/realtime-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword })
+    });
+    if (!res.ok) throw new Error('Failed to search grants');
+    return res.json();
+}
+
+// Save a grant to user's saved list
+export async function saveGrant(grant: any) {
+    const res = await fetch(`${API_BASE_URL}/realtime-search/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(grant)
+    });
+    if (!res.ok) throw new Error('Failed to save grant');
+    return res.json();
+}
+
+// Get user's saved grants
+export async function getSavedGrants() {
+    const res = await fetch(`${API_BASE_URL}/realtime-search/saved`);
+    if (!res.ok) throw new Error('Failed to fetch saved grants');
+    return res.json();
+}
+
+// Deep Dive API - Get comprehensive grant information
+export async function getGrantDeepDive(grantId: number) {
+    const res = await fetch(`${API_BASE_URL}/search/grant/${grantId}/deep-dive`);
+    if (!res.ok) throw new Error('Failed to fetch grant details');
+    return res.json();
+}

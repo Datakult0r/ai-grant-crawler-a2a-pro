@@ -16,6 +16,8 @@ import trackerRouter from "./routes/tracker.js";
 import predictorRouter from "./routes/predictor.js";
 import documentsRouter from "./routes/documents.js";
 import teamRouter from "./routes/team.js";
+import searchRouter from "./routes/search.js";
+import realtimeSearchRouter from "./routes/realtime-search.js";
 // Phase 1: Grant Discovery Routes & Jobs
 import adminSourcesRouter from "./routes/admin/sources.js";
 import { ScheduledDiscoveryJob } from "./jobs/scheduledDiscovery.js";
@@ -121,6 +123,8 @@ app.get("/metrics", (req, res) => {
 
 // API routes
 app.use("/api/grants", grantsRouter);
+app.use("/api/search", searchRouter);
+app.use("/api/realtime-search", realtimeSearchRouter); // Real-time grant discovery
 app.use("/api/crawler", crawlerRouter);
 app.use("/api/matcher", matcherRouter);
 app.use("/api/thinktank", thinktankRouter);
