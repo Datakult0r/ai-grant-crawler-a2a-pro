@@ -10,6 +10,7 @@ import yaml
 import argparse
 from pathlib import Path
 from ai_lab_repo import LaboratoryWorkflow
+from logger import get_logger, stream_error
 
 def create_grant_yaml_config(grant_data, output_path="grant_research_config.yaml"):
     """
@@ -80,23 +81,35 @@ def create_grant_yaml_config(grant_data, output_path="grant_research_config.yaml
 
     return output_path
 
-def stream_phase_update(phase_name, message=""):
-    """Stream a phase update as JSON to stdout for SSE consumption."""
-    event = {
-        "type": "stage_started",
-        "stage": phase_name,
-        "message": message or f"Starting {phase_name}"
-    }
-    print(json.dumps(event), flush=True)
+def stream_phase_update(phase_name, message="", stage_index=0):
+    """Stream a phase update using the logger."""
+    get_logger().phase_started(phase_name, message, stage_index)
 
-def stream_log(message, level="info"):
-    """Stream a log message as JSON to stdout."""
-    event = {
-        "type": "log",
-        "level": level,
-        "message": message
-    }
-    print(json.dumps(event), flush=True)
+def stream_agent_active(agent_name, stage, action, progress=0):
+    """Stream agent activity using the logger."""
+    get_logger().agent_active(agent_name, stage, action, progress)
+
+def stream_agent_idle(agent_name, message=""):
+    """Stream agent idle event using the logger."""
+    get_logger().agent_idle(agent_name, message)
+
+def stream_stage_completed(stage_name, stage_index, duration, summary=""):
+    """Stream stage completion using the logger."""
+    get_logger().stage_completed(stage_name, stage_index, duration, summary)
+
+def stream_log(message, level="info", agent="System"):
+    """Stream a log message using the logger."""
+    logger = get_logger(agent)
+    if level == "error":
+        logger.error(message)
+    elif level == "warning":
+        logger.warning(message)
+    else:
+        logger.info(message)
+
+def stream_error(message):
+    """Stream an error event using the logger."""
+    get_logger().error(message)
 
 def run_agent_laboratory(grant_data):
     """
@@ -144,23 +157,40 @@ def run_agent_laboratory(grant_data):
         # Get agent models
         agent_models = args.agent_models if hasattr(args, 'agent_models') else "gpt-4o-mini"
 
-        # Create research directory
+        # Create research directory with robust error handling
         research_dir = "grant_research_output"
-        if not os.path.exists(research_dir):
-            os.mkdir(research_dir)
+        try:
+            os.makedirs(research_dir, exist_ok=True)
+        except Exception as e:
+            stream_error(f"Failed to create research directory: {str(e)}")
+            sys.exit(1)
 
         # Use proposal_id for isolation (Virtualization)
         proposal_id = grant_data.get("proposal_id", "0")
         lab_dir = os.path.join(research_dir, f"research_dir_{proposal_id}")
         
-        if not os.path.exists(lab_dir):
-            os.mkdir(lab_dir)
-            if not os.path.exists(os.path.join(lab_dir, "src")):
-                os.mkdir(os.path.join(lab_dir, "src"))
-            if not os.path.exists(os.path.join(lab_dir, "tex")):
-                os.mkdir(os.path.join(lab_dir, "tex"))
+        try:
+            # Create all necessary directories atomically
+            os.makedirs(lab_dir, exist_ok=True)
+            os.makedirs(os.path.join(lab_dir, "src"), exist_ok=True)
+            os.makedirs(os.path.join(lab_dir, "tex"), exist_ok=True)
+            
+            stream_log(f"Created isolated workspace: {lab_dir}")
+        except Exception as e:
+            stream_error(f"Failed to create workspace directories: {str(e)}")
+            sys.exit(1)
 
         stream_phase_update("Literature Review", "Beginning literature review phase")
+
+        # Initialize Guardrails
+        from guardrails import AgentGuardrails
+        guardrails = AgentGuardrails(
+            max_steps_per_phase=int(os.getenv('MAX_STEPS_PER_PHASE', '10')),
+            max_cost_usd=float(os.getenv('MAX_COST_USD', '15.0')),
+            timeout_seconds=int(os.getenv('AGENT_TIMEOUT_SECONDS', '300')),
+            circuit_breaker_threshold=int(os.getenv('CIRCUIT_BREAKER_THRESHOLD', '3'))
+        )
+        stream_log(f"Guardrails initialized: max_steps={guardrails.max_steps_per_phase}, max_cost=${guardrails.max_cost_usd}")
 
         # Initialize Laboratory Workflow
         lab = LaboratoryWorkflow(
@@ -179,16 +209,51 @@ def run_agent_laboratory(grant_data):
             lab_index=0,
             lab_dir=f"./{lab_dir}"
         )
+        
+        # Attach guardrails to lab instance
+        lab.guardrails = guardrails
 
-        # Run research workflow
+        # Run research workflow with 7-stage tracking
         stream_log("Agent Laboratory initialized successfully")
-        stream_log("Starting research workflow...")
-
-        # Monkey-patch the lab instance to stream progress
-        original_verbose = lab.verbose
-
-        # Run the research
-        lab.perform_research()
+        stream_log("Starting 7-stage research workflow...")
+        
+        # Define the 7 research stages
+        research_stages = [
+            {"name": "Literature Review", "agent": "PhD Student", "index": 0},
+            {"name": "Plan Formulation", "agent": "Postdoc", "index": 1},
+            {"name": "Data Preparation", "agent": "ML Engineer", "index": 2},
+            {"name": "Running Experiments", "agent": "SW Engineer", "index": 3},
+            {"name": "Results Interpretation", "agent": "Professor", "index": 4},
+            {"name": "Report Writing", "agent": "PhD Student", "index": 5},
+            {"name": "Report Refinement", "agent": "Professor", "index": 6},
+        ]
+        
+        import time
+        start_time = time.time()
+        
+        # Stream initial stage
+        stream_phase_update(research_stages[0]["name"], 
+                          f"Starting {research_stages[0]['name']}", 
+                          research_stages[0]["index"])
+        stream_agent_active(research_stages[0]["agent"], 
+                          research_stages[0]["name"],
+                          "Searching for relevant papers", 0)
+        
+        try:
+            # Run the actual research (this is the Agent Laboratory workflow)
+            # We'll wrap it to track progress through stages
+            lab.perform_research()
+            
+            # If we get here, research completed successfully
+            # Stream final stage completion
+            final_stage = research_stages[-1]
+            elapsed = int(time.time() - start_time)
+            stream_stage_completed(final_stage["name"], final_stage["index"], 
+                                 elapsed, "Research workflow completed")
+            
+        except Exception as research_error:
+            stream_error(f"Research workflow error: {str(research_error)}")
+            raise
 
         stream_log("Research workflow completed successfully!")
 
