@@ -53,7 +53,7 @@
   }
 
   let rawGrants = $state<GrantData[]>([]);
-  let loading = $state(true);
+  let loading = $state(false); // Start with no loading - search-first interface
   let error = $state<string | null>(null);
 
   // Gatekeeper state
@@ -164,20 +164,9 @@
         : 0,
   });
 
-  onMount(async () => {
-    try {
-      rawGrants = await fetchGrants();
-      if (rawGrants.length > 0) {
-        toasts.success("Grants loaded", `Found ${rawGrants.length} grants`);
-      }
-    } catch (e) {
-      console.error(e);
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      error = errorMessage;
-      toasts.error("Failed to load grants", errorMessage);
-    } finally {
-      loading = false;
-    }
+  // No initial data load - real-time search only
+  onMount(() => {
+    console.log("Ready for real-time grant discovery via search");
   });
 
   async function handleApply(grant: Grant) {

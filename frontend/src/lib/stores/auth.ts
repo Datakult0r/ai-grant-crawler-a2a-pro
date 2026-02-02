@@ -1,6 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { supabase, type User } from '$lib/supabase';
-import type { Session } from '@supabase/supabase-js';
+import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 interface AuthState {
     user: User | null;
@@ -42,7 +42,7 @@ function createAuthStore() {
                     set({ ...initialState, loading: false });
                 }
 
-                supabase.auth.onAuthStateChange((_event, session) => {
+                supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
                     if (session?.user) {
                         set({
                             user: {

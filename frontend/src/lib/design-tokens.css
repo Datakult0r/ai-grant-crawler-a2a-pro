@@ -1,0 +1,326 @@
+/**
+ * Design Tokens - Single Source of Truth
+ * Generated using UI Design System skill
+ * Style: Modern Cyberpunk with Premium Aesthetics
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* ========================================
+     COLORS - Enhanced Cyberpunk Palette
+     ======================================== */
+
+  /* Primary - Purple (Brand) */
+  --color-primary-50: #faf5ff;
+  --color-primary-100: #f3e8ff;
+  --color-primary-200: #e9d5ff;
+  --color-primary-300: #d8b4fe;
+  --color-primary-400: #c084fc;
+  --color-primary-500: #a855f7;
+  --color-primary-600: #9333ea;
+  --color-primary-700: #7e22ce;
+  --color-primary-800: #6b21a8;
+  --color-primary-900: #581c87;
+  --color-primary: var(--color-primary-500);
+
+  /* Secondary - Blue */
+  --color-secondary-50: #eff6ff;
+  --color-secondary-100: #dbeafe;
+  --color-secondary-200: #bfdbfe;
+  --color-secondary-300: #93c5fd;
+  --color-secondary-400: #60a5fa;
+  --color-secondary-500: #3b82f6;
+  --color-secondary-600: #2563eb;
+  --color-secondary-700: #1d4ed8;
+  --color-secondary-800: #1e40af;
+  --color-secondary-900: #1e3a8a;
+  --color-secondary: var(--color-secondary-500);
+
+  /* Accent - Green */
+  --color-accent-50: #ecfdf5;
+  --color-accent-100: #d1fae5;
+  --color-accent-200: #a7f3d0;
+  --color-accent-300: #6ee7b7;
+  --color-accent-400: #34d399;
+  --color-accent-500: #10b981;
+  --color-accent-600: #059669;
+  --color-accent-700: #047857;
+  --color-accent-800: #065f46;
+  --color-accent-900: #064e3b;
+  --color-accent: var(--color-accent-500);
+
+  /* Neutral - Grays */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-500: #71717a;
+  --color-neutral-600: #52525b;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-800: #27272a;
+  --color-neutral-900: #18181b;
+  --color-neutral-950: #0a0a0f;
+
+  /* Semantic Colors */
+  --color-success: #10b981;
+  --color-success-light: #34d399;
+  --color-success-dark: #059669;
+
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-warning-dark: #d97706;
+
+  --color-error: #ef4444;
+  --color-error-light: #f87171;
+  --color-error-dark: #dc2626;
+
+  --color-info: #3b82f6;
+  --color-info-light: #60a5fa;
+  --color-info-dark: #2563eb;
+
+  /* Surface Colors */
+  --color-background: var(--color-neutral-950);
+  --color-foreground: var(--color-neutral-50);
+  --color-card: var(--color-neutral-900);
+  --color-card-foreground: var(--color-neutral-50);
+  --color-muted: var(--color-neutral-800);
+  --color-muted-foreground: var(--color-neutral-400);
+  --color-border: var(--color-neutral-800);
+  --color-input: var(--color-neutral-800);
+  --color-ring: var(--color-primary-500);
+
+  /* ========================================
+     TYPOGRAPHY
+     ======================================== */
+
+  /* Font Families */
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Font Sizes - Modular Scale (1.25 ratio) */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem; /* 36px */
+  --font-size-5xl: 3rem; /* 48px */
+  --font-size-6xl: 3.75rem; /* 60px */
+
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+
+  /* Letter Spacing */
+  --letter-spacing-tighter: -0.05em;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
+  --letter-spacing-widest: 0.1em;
+
+  /* ========================================
+     SPACING - 8pt Grid System
+     ======================================== */
+
+  --spacing-0: 0;
+  --spacing-1: 0.25rem; /* 4px */
+  --spacing-2: 0.5rem; /* 8px */
+  --spacing-3: 0.75rem; /* 12px */
+  --spacing-4: 1rem; /* 16px */
+  --spacing-5: 1.25rem; /* 20px */
+  --spacing-6: 1.5rem; /* 24px */
+  --spacing-7: 1.75rem; /* 28px */
+  --spacing-8: 2rem; /* 32px */
+  --spacing-9: 2.25rem; /* 36px */
+  --spacing-10: 2.5rem; /* 40px */
+  --spacing-12: 3rem; /* 48px */
+  --spacing-14: 3.5rem; /* 56px */
+  --spacing-16: 4rem; /* 64px */
+  --spacing-20: 5rem; /* 80px */
+  --spacing-24: 6rem; /* 96px */
+  --spacing-32: 8rem; /* 128px */
+
+  /* Semantic Spacing */
+  --spacing-xs: var(--spacing-1);
+  --spacing-sm: var(--spacing-2);
+  --spacing-md: var(--spacing-4);
+  --spacing-lg: var(--spacing-6);
+  --spacing-xl: var(--spacing-8);
+  --spacing-2xl: var(--spacing-12);
+  --spacing-3xl: var(--spacing-16);
+
+  /* ========================================
+     BORDERS & RADIUS
+     ======================================== */
+
+  --border-width-thin: 1px;
+  --border-width-medium: 2px;
+  --border-width-thick: 4px;
+
+  --radius-none: 0;
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.5rem; /* 8px */
+  --radius-lg: 0.75rem; /* 12px */
+  --radius-xl: 1rem; /* 16px */
+  --radius-2xl: 1.5rem; /* 24px */
+  --radius-full: 9999px;
+
+  /* ========================================
+     SHADOWS - Layered Depth
+     ======================================== */
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+
+  /* Neon Glow Shadows */
+  --shadow-glow-primary:
+    0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
+  --shadow-glow-primary-lg:
+    0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(168, 85, 247, 0.3);
+  --shadow-glow-secondary:
+    0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2);
+  --shadow-glow-accent:
+    0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
+
+  /* ========================================
+     ANIMATIONS
+     ======================================== */
+
+  /* Durations */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-slower: 500ms;
+
+  /* Easing Functions */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ========================================
+     Z-INDEX SCALE
+     ======================================== */
+
+  --z-hide: -1;
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-overlay: 1030;
+  --z-modal: 1040;
+  --z-popover: 1050;
+  --z-tooltip: 1060;
+  --z-notification: 1070;
+
+  /* ========================================
+     COMPONENT SIZES
+     ======================================== */
+
+  /* Buttons */
+  --button-height-sm: 2rem; /* 32px */
+  --button-height-md: 2.5rem; /* 40px */
+  --button-height-lg: 3rem; /* 48px */
+  --button-padding-x-sm: 0.75rem;
+  --button-padding-x-md: 1rem;
+  --button-padding-x-lg: 1.25rem;
+
+  /* Inputs */
+  --input-height-sm: 2rem;
+  --input-height-md: 2.5rem;
+  --input-height-lg: 3rem;
+
+  /* Icons */
+  --icon-size-sm: 1rem; /* 16px */
+  --icon-size-md: 1.25rem; /* 20px */
+  --icon-size-lg: 1.5rem; /* 24px */
+  --icon-size-xl: 2rem; /* 32px */
+
+  /* ========================================
+     BREAKPOINTS
+     ======================================== */
+
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+/* Typography Presets */
+.text-h1 {
+  font-size: var(--font-size-5xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.text-h2 {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.text-h3 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.text-h4 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.text-body {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+.text-small {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+.text-caption {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-wide);
+}

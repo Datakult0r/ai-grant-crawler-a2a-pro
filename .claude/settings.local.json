@@ -16,7 +16,9 @@
       "Bash(node --check:*)",
       "Bash(python -m compileall:*)",
       "Bash(git rev-parse:*)",
-      "Bash(gh --version:*)"
+      "Bash(gh --version:*)",
+      "Bash(npm install)",
+      "Bash(claude mcp search:*)"
     ],
     "deny": [],
     "ask": []

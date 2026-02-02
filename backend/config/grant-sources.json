@@ -1,0 +1,132 @@
+{
+  "sources": [
+    {
+      "name": "Grants.gov - All Programs",
+      "url": "https://www.grants.gov/search-grants",
+      "type": "government",
+      "region": "USA",
+      "priority": "high",
+      "scrape_frequency": "daily"
+    },
+    {
+      "name": "NSF Awards Search",
+      "url": "https://www.nsf.gov/awardsearch/",
+      "type": "government",
+      "region": "USA",
+      "priority": "high",
+      "scrape_frequency": "daily"
+    },
+    {
+      "name": "EU Funding & Tenders Portal",
+      "url": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/home",
+      "type": "government",
+      "region": "EU",
+      "priority": "high",
+      "scrape_frequency": "daily"
+    },
+    {
+      "name": "Horizon Europe Funding",
+      "url": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-search",
+      "type": "government",
+      "region": "EU",
+      "priority": "high",
+      "scrape_frequency": "daily"
+    },
+    {
+      "name": "EIC Accelerator",
+      "url": "https://eic.ec.europa.eu/eic-funding-opportunities_en",
+      "type": "government",
+      "region": "EU",
+      "priority": "high",
+      "scrape_frequency": "weekly"
+    },
+    {
+      "name": "Portugal - ANI (Agência Nacional de Inovação)",
+      "url": "https://www.ani.pt/pt/apoios-e-incentivos/",
+      "type": "government",
+      "region": "Portugal",
+      "priority": "high",
+      "scrape_frequency": "daily"
+    },
+    {
+      "name": "Portugal - IAPMEI",
+      "url": "https://www.iapmei.pt/PRODUTOS-E-SERVICOS/Incentivos-Financiamento.aspx",
+      "type": "government",
+      "region": "Portugal",
+      "priority": "high",
+      "scrape_frequency": "daily"
+    },
+    {
+      "name": "Portugal - COMPETE 2030",
+      "url": "https://www.compete2030.gov.pt/",
+      "type": "government",
+      "region": "Portugal",
+      "priority": "high",
+      "scrape_frequency": "daily"
+    },
+    {
+      "name": "Portugal - Fundação para a Ciência e a Tecnologia (FCT)",
+      "url": "https://www.fct.pt/apoios/",
+      "type": "government",
+      "region": "Portugal",
+      "priority": "high",
+      "scrape_frequency": "daily"
+    },
+    {
+      "name": "NIH Grants & Funding",
+      "url": "https://grants.nih.gov/grants/oer.htm",
+      "type": "government",
+      "region": "USA",
+      "priority": "medium",
+      "scrape_frequency": "weekly"
+    },
+    {
+      "name": "DARPA Open Solicitations",
+      "url": "https://www.darpa.mil/work-with-us/opportunities",
+      "type": "government",
+      "region": "USA",
+      "priority": "medium",
+      "scrape_frequency": "weekly"
+    },
+    {
+      "name": "UK Research and Innovation (UKRI)",
+      "url": "https://www.ukri.org/opportunity/",
+      "type": "government",
+      "region": "UK",
+      "priority": "medium",
+      "scrape_frequency": "weekly"
+    },
+    {
+      "name": "Innovate UK Funding",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/search",
+      "type": "government",
+      "region": "UK",
+      "priority": "medium",
+      "scrape_frequency": "weekly"
+    },
+    {
+      "name": "Canada - NSERC Funding",
+      "url": "https://www.nserc-crsng.gc.ca/Professors-Professeurs/Grants-Subs/index_eng.asp",
+      "type": "government",
+      "region": "Canada",
+      "priority": "low",
+      "scrape_frequency": "weekly"
+    },
+    {
+      "name": "Bill & Melinda Gates Foundation",
+      "url": "https://www.gatesfoundation.org/about/how-we-work/general-information/grant-opportunities",
+      "type": "foundation",
+      "region": "Global",
+      "priority": "medium",
+      "scrape_frequency": "weekly"
+    },
+    {
+      "name": "European Research Council (ERC)",
+      "url": "https://erc.europa.eu/funding/open-calls",
+      "type": "government",
+      "region": "EU",
+      "priority": "high",
+      "scrape_frequency": "daily"
+    }
+  ]
+}

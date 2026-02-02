@@ -24,19 +24,19 @@ const BRIDGE_SCRIPT = "grant_research_bridge.py";
 export const generateResearchProposal = async (
   grantData,
   companyProfile,
-  proposalId
+  proposalId,
 ) => {
   const startTime = Date.now();
 
   try {
     console.log(
-      `[AI-Researcher MODE 2] Starting research proposal generation for grant: ${grantData.name}`
+      `[AI-Researcher MODE 2] Starting research proposal generation for grant: ${grantData.name}`,
     );
     sendLog(
       proposalId,
       `Starting autonomous research agents...`,
       "System",
-      "Starting"
+      "Starting",
     );
     sendProgress(proposalId, 0);
 
@@ -67,7 +67,7 @@ export const generateResearchProposal = async (
           OPENAI_API_KEY: env.openAiKey,
           DEEPSEEK_API_KEY: env.deepSeekKey,
         },
-      }
+      },
     );
 
     let outputDir = null;
@@ -113,8 +113,8 @@ export const generateResearchProposal = async (
         } else {
           reject(
             new Error(
-              `Research process exited with code ${code}. Status: ${finalStatus}`
-            )
+              `Research process exited with code ${code}. Status: ${finalStatus}`,
+            ),
           );
         }
       });
@@ -136,12 +136,12 @@ export const generateResearchProposal = async (
         proposalId,
         "Storing final proposal in database...",
         "System",
-        "Saving"
+        "Saving",
       );
       await storeProposal(
         proposalId,
         reportContent,
-        Math.floor((Date.now() - startTime) / 1000)
+        Math.floor((Date.now() - startTime) / 1000),
       );
       sendProgress(proposalId, 100);
 
@@ -149,7 +149,7 @@ export const generateResearchProposal = async (
       return reportContent;
     } else {
       throw new Error(
-        "Research completed but no output directory was reported."
+        "Research completed but no output directory was reported.",
       );
     }
   } catch (error) {
@@ -158,7 +158,7 @@ export const generateResearchProposal = async (
       proposalId,
       `Critical Failure: ${error.message}`,
       "System",
-      "Error"
+      "Error",
     );
     throw error;
   }
@@ -176,10 +176,44 @@ const handleBridgeEvent = (event, proposalId) => {
       sendProgress(proposalId, mapStageToProgress(event.stage));
       break;
     case "log":
-      sendLog(proposalId, event.message, "Researcher", "Working");
+      const logLevel = event.level || "info";
+      const agentName = event.agent || "Researcher";
+      const status =
+        logLevel === "error"
+          ? "Error"
+          : logLevel === "warning"
+            ? "Warning"
+            : "Working";
+      sendLog(proposalId, event.message, agentName, status);
       break;
     case "error":
-      sendLog(proposalId, `Error: ${event.message}`, "System", "Error");
+      const isRecoverable = event.context?.recoverable || false;
+      const errorStatus = isRecoverable ? "Warning" : "Error";
+      sendLog(
+        proposalId,
+        `${isRecoverable ? "Recoverable " : ""}Error: ${event.message}`,
+        "System",
+        errorStatus,
+      );
+      break;
+    case "metric":
+      // Log metrics for monitoring
+      console.log(
+        `[Metric] ${event.metric}: ${event.value} ${event.unit || ""}`,
+      );
+      break;
+    case "agent_action":
+      sendLog(
+        proposalId,
+        `${event.agent}: ${event.action}`,
+        event.agent,
+        "Action",
+      );
+      break;
+    case "progress":
+      if (event.percentage !== undefined) {
+        sendProgress(proposalId, event.percentage);
+      }
       break;
     case "status":
       // Handled in main loop

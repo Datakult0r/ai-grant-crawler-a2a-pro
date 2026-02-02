@@ -1,0 +1,4 @@
+PUBLIC_API_URL	https://ai-grant-crawler-a2a-pro-production.up.railway.app/api
+PUBLIC_SUPABASE_URL	https://crzpbyhgtojejcdnaajy.supabase.co
+PUBLIC_SUPABASE_ANON_KEY	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyenBieWhndG9qZWpjZG5hYWp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTU5NDUsImV4cCI6MjA4MDI3MTk0NX0.vnd_AaycbnbHuPY9YAXrjdtFTsF1qo9Ht5sP0-q-KHU
+PUBLIC_IS_DEMO	false
