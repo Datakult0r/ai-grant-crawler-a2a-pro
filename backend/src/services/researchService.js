@@ -6,7 +6,7 @@ dotenv.config();
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_ANON_KEY,
 );
 
 // SSE Hardening Configuration
@@ -20,13 +20,54 @@ const SSE_CONFIG = {
 // Research phases matching Agent Laboratory specification
 // See: Agent Laboratory paper - 7 research phases with specialized agents
 const RESEARCH_PHASES = [
-  { id: 0, name: "Literature Review", description: "PhD Student reviewing relevant literature and prior work", agent: "PhD Student" },
-  { id: 1, name: "Plan Formulation", description: "Postdoc and Professor formulating research plan", agent: "Postdoc" },
-  { id: 2, name: "Data Preparation", description: "ML Engineer preparing datasets and preprocessing", agent: "ML Engineer" },
-  { id: 3, name: "Running Experiments", description: "ML Engineer and SW Engineer running experiments", agent: "ML Engineer" },
-  { id: 4, name: "Results Interpretation", description: "Team analyzing and interpreting results", agent: "Professor" },
-  { id: 5, name: "Report Writing", description: "PhD Student and Postdoc drafting the report", agent: "PhD Student" },
-  { id: 6, name: "Report Refinement", description: "Professor reviewing and refining the final report", agent: "Professor" },
+  {
+    id: 0,
+    name: "Literature Review",
+    description: "PhD Student reviewing relevant literature and prior work",
+    agent: "PhD Student",
+  },
+  {
+    id: 1,
+    name: "Plan Formulation",
+    description: "Postdoc and Professor formulating research plan",
+    agent: "Postdoc",
+  },
+  {
+    id: 2,
+    name: "Data Preparation",
+    description: "ML Engineer preparing datasets and preprocessing",
+    agent: "ML Engineer",
+  },
+  {
+    id: 3,
+    name: "Running Experiments",
+    description: "ML Engineer and SW Engineer running experiments",
+    agent: "ML Engineer",
+  },
+  {
+    id: 4,
+    name: "Results Interpretation",
+    description: "Team analyzing and interpreting results",
+    agent: "Professor",
+  },
+  {
+    id: 5,
+    name: "Report Writing",
+    description: "PhD Student and Postdoc drafting the report",
+    agent: "PhD Student",
+  },
+  {
+    id: 6,
+    name: "Report Refinement",
+    description: "Professor reviewing and refining the final report",
+    agent: "Professor",
+  },
+  {
+    id: 7,
+    name: "Self-Correction",
+    description: "Auditor critiquing the research output against requirements",
+    agent: "Auditor",
+  },
 ];
 
 export class ResearchService {
@@ -49,9 +90,10 @@ export class ResearchService {
       res.write(
         `data: ${JSON.stringify({
           type: "fallback",
-          message: "Deep research unavailable (OPENROUTER_API_KEY missing). Switching to Fast Track mode.",
+          message:
+            "Deep research unavailable (OPENROUTER_API_KEY missing). Switching to Fast Track mode.",
           fallbackMode: "fast_track",
-        })}\n\n`
+        })}\n\n`,
       );
       res.end();
       return;
@@ -68,7 +110,7 @@ export class ResearchService {
         `data: ${JSON.stringify({
           type: "error",
           message: "Grant not found",
-        })}\n\n`
+        })}\n\n`,
       );
       res.end();
       return;
@@ -89,7 +131,7 @@ export class ResearchService {
         `data: ${JSON.stringify({
           type: "error",
           message: "Failed to create research record",
-        })}\n\n`
+        })}\n\n`,
       );
       return;
     }
@@ -105,7 +147,7 @@ export class ResearchService {
 
     // 4. Spawn Python Process - Using bridge script for Agent Laboratory
     const pythonScriptPath = path.resolve(
-      "ai-researcher/grant_research_bridge.py"
+      "ai-researcher/grant_research_bridge.py",
     );
 
     const pythonProcess = spawn(
@@ -117,11 +159,11 @@ export class ResearchService {
           ...process.env,
           PYTHONUNBUFFERED: "1", // Ensure real-time output streaming
         },
-      }
+      },
     );
 
     console.log(
-      `Spawned Agent Lab for Grant ${grantId} (PID: ${pythonProcess.pid})`
+      `Spawned Agent Lab for Grant ${grantId} (PID: ${pythonProcess.pid})`,
     );
 
     // Send initial phases info to frontend
@@ -130,7 +172,7 @@ export class ResearchService {
         type: "phases_info",
         phases: RESEARCH_PHASES,
         totalPhases: RESEARCH_PHASES.length,
-      })}\n\n`
+      })}\n\n`,
     );
 
     // 5. Setup heartbeat interval to keep connection alive
@@ -151,18 +193,20 @@ export class ResearchService {
           timestamp: new Date().toISOString(),
           currentPhase,
           phaseName: RESEARCH_PHASES[currentPhase]?.name || "Unknown",
-        })}\n\n`
+        })}\n\n`,
       );
 
       // Check for timeout
       const timeSinceLastActivity = Date.now() - lastActivityTime;
       if (timeSinceLastActivity > SSE_CONFIG.TIMEOUT_MS) {
-        console.error(`Research timeout for grant ${grantId} after ${SSE_CONFIG.TIMEOUT_MS}ms`);
+        console.error(
+          `Research timeout for grant ${grantId} after ${SSE_CONFIG.TIMEOUT_MS}ms`,
+        );
         res.write(
           `data: ${JSON.stringify({
             type: "timeout",
             message: "Research process timed out. Please try again.",
-          })}\n\n`
+          })}\n\n`,
         );
         pythonProcess.kill();
         clearInterval(heartbeatInterval);
@@ -192,20 +236,22 @@ export class ResearchService {
           if (parsed.type === "stage_started" || parsed.type === "phase") {
             const phaseNum = parsed.stage ?? parsed.phase ?? currentPhase;
             currentPhase = phaseNum;
-            
-                        // Enhanced phase event with phase details and agent info
-                        const phaseInfo = RESEARCH_PHASES[currentPhase] || {};
-                        res.write(
-                          `data: ${JSON.stringify({
-                            type: "phase",
-                            phase: currentPhase,
-                            phaseName: phaseInfo.name || "Unknown",
-                            phaseDescription: phaseInfo.description || "",
-                            agent: phaseInfo.agent || "System",
-                            totalPhases: RESEARCH_PHASES.length,
-                            progress: Math.round((currentPhase / RESEARCH_PHASES.length) * 100),
-                          })}\n\n`
-                        );
+
+            // Enhanced phase event with phase details and agent info
+            const phaseInfo = RESEARCH_PHASES[currentPhase] || {};
+            res.write(
+              `data: ${JSON.stringify({
+                type: "phase",
+                phase: currentPhase,
+                phaseName: phaseInfo.name || "Unknown",
+                phaseDescription: phaseInfo.description || "",
+                agent: phaseInfo.agent || "System",
+                totalPhases: RESEARCH_PHASES.length,
+                progress: Math.round(
+                  (currentPhase / RESEARCH_PHASES.length) * 100,
+                ),
+              })}\n\n`,
+            );
 
             // Update database on stage changes
             supabase
@@ -220,7 +266,7 @@ export class ResearchService {
         } catch (e) {
           // Not JSON, wrap as text log
           res.write(
-            `data: ${JSON.stringify({ type: "log", message: trimmed })}\n\n`
+            `data: ${JSON.stringify({ type: "log", message: trimmed })}\n\n`,
           );
         }
       }
@@ -234,14 +280,14 @@ export class ResearchService {
           type: "log",
           level: "error",
           message: data.toString(),
-        })}\n\n`
+        })}\n\n`,
       );
     });
 
     pythonProcess.on("close", async (code) => {
       isProcessComplete = true;
       clearInterval(heartbeatInterval);
-      
+
       console.log(`Agent Lab exited with code ${code}`);
       const status = code === 0 ? "completed" : "failed";
 
@@ -252,12 +298,12 @@ export class ResearchService {
         .eq("id", researchRecord.id);
 
       res.write(
-        `data: ${JSON.stringify({ 
-          type: "status", 
+        `data: ${JSON.stringify({
+          type: "status",
           status: status,
           finalPhase: currentPhase,
           totalPhases: RESEARCH_PHASES.length,
-        })}\n\n`
+        })}\n\n`,
       );
       res.end();
     });
@@ -267,7 +313,9 @@ export class ResearchService {
       isProcessComplete = true;
       clearInterval(heartbeatInterval);
       if (pythonProcess && !pythonProcess.killed) {
-        console.log(`Client disconnected, killing Agent Lab process ${pythonProcess.pid}`);
+        console.log(
+          `Client disconnected, killing Agent Lab process ${pythonProcess.pid}`,
+        );
         pythonProcess.kill();
       }
     });
