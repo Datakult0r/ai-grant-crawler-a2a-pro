@@ -4,11 +4,20 @@ dotenv.config();
 
 const apiKey = process.env.FIRECRAWL_API_KEY;
 if (!apiKey) {
-  console.warn("⚠️ FIRECRAWL_API_KEY missing in .env - Firecrawl features will be disabled");
+  console.warn(
+    "⚠️ FIRECRAWL_API_KEY missing in .env - Firecrawl features will be disabled",
+  );
 }
 
 // Only initialize Firecrawl if API key is available
 const firecrawl = apiKey ? new FirecrawlApp({ apiKey: apiKey }) : null;
+if (firecrawl) {
+  console.log("[DEBUG] Firecrawl instance keys:", Object.keys(firecrawl));
+  console.log(
+    "[DEBUG] Firecrawl proto keys:",
+    Object.getOwnPropertyNames(Object.getPrototypeOf(firecrawl)),
+  );
+}
 
 export class FirecrawlService {
   /**
@@ -25,17 +34,17 @@ export class FirecrawlService {
    */
   static async scrapeGrantPage(url) {
     if (!firecrawl) {
-      console.warn('[FIRECRAWL] Service not available - API key missing');
-      return { success: false, error: 'Firecrawl API key not configured' };
+      console.warn("[FIRECRAWL] Service not available - API key missing");
+      return { success: false, error: "Firecrawl API key not configured" };
     }
     try {
-      const scrapeResult = await firecrawl.scrapeUrl(url, {
+      const scrapeResult = await firecrawl.scrape(url, {
         formats: ["markdown"],
       });
-      return scrapeResult;
+      return { success: true, ...scrapeResult };
     } catch (error) {
       console.error(`Firecrawl scrape failed for ${url}:`, error);
-      throw error;
+      return { success: false, error: error.message };
     }
   }
 
@@ -47,8 +56,8 @@ export class FirecrawlService {
    */
   static async crawlGrantSite(url, limit = 10) {
     if (!firecrawl) {
-      console.warn('[FIRECRAWL] Service not available - API key missing');
-      return { success: false, error: 'Firecrawl API key not configured' };
+      console.warn("[FIRECRAWL] Service not available - API key missing");
+      return { success: false, error: "Firecrawl API key not configured" };
     }
     try {
       const crawlResponse = await firecrawl.crawlUrl(url, {
@@ -79,8 +88,8 @@ export class FirecrawlService {
    */
   static async searchGrantContext(query) {
     if (!firecrawl) {
-      console.warn('[FIRECRAWL] Service not available - API key missing');
-      return { success: false, error: 'Firecrawl API key not configured' };
+      console.warn("[FIRECRAWL] Service not available - API key missing");
+      return { success: false, error: "Firecrawl API key not configured" };
     }
     try {
       const params = {
@@ -120,7 +129,7 @@ export class FirecrawlService {
    */
   static async deepResearchGrant(grantName) {
     return await this.searchGrantContext(
-      `${grantName} grant requirements success stories`
+      `${grantName} grant requirements success stories`,
     );
   }
 }

@@ -1,23 +1,23 @@
-import FirecrawlApp from '@mendable/firecrawl-js';
-import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import fs from 'fs';
-import path from 'path';
-import dotenv from 'dotenv';
+import FirecrawlApp from "@mendable/firecrawl-js";
+import { createClient } from "@supabase/supabase-js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import fs from "fs";
+import path from "path";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 // Load grant sources
-const sourcesPath = path.join(process.cwd(), 'config', 'grant-sources.json');
-const sources = JSON.parse(fs.readFileSync(sourcesPath, 'utf-8')).sources;
+const sourcesPath = path.join(process.cwd(), "config", "grant-sources.json");
+const sources = JSON.parse(fs.readFileSync(sourcesPath, "utf-8")).sources;
 
 console.log(`🔍 Loaded ${sources.length} grant sources to crawl`);
 
@@ -73,7 +73,10 @@ Format:
     console.log(`✅ Found ${grants.length} grants from ${sourceName}`);
     return grants;
   } catch (error) {
-    console.error(`❌ Error extracting grants from ${sourceName}:`, error.message);
+    console.error(
+      `❌ Error extracting grants from ${sourceName}:`,
+      error.message,
+    );
     return [];
   }
 }
@@ -88,7 +91,7 @@ async function crawlSource(source) {
   try {
     // Scrape the page with Firecrawl
     const scrapeResult = await firecrawl.scrapeUrl(source.url, {
-      formats: ['markdown'],
+      formats: ["markdown"],
       waitFor: 3000,
     });
 
@@ -103,7 +106,7 @@ async function crawlSource(source) {
     const grants = await extractGrantsFromContent(
       source.url,
       scrapeResult.markdown,
-      source.name
+      source.name,
     );
 
     if (grants.length === 0) {
@@ -111,29 +114,29 @@ async function crawlSource(source) {
     }
 
     // Save grants to database
-    const grantsToInsert = grants.map(grant => ({
+    const grantsToInsert = grants.map((grant) => ({
       name: grant.name,
       description: grant.description,
       source: source.name,
       source_url: grant.source_url || source.url,
-      funding_amount: grant.funding_amount || 'TBD',
-      amount: grant.funding_amount || 'TBD',
+      funding_amount: grant.funding_amount || "TBD",
+      amount: grant.funding_amount || "TBD",
       deadline: grant.deadline,
       eligibility: grant.eligibility,
-      category: grant.category || 'General',
+      category: grant.category || "General",
       region: grant.region || source.region,
       country: grant.region || source.region,
       relevance_score: 75, // Default score
       relevance: 75,
-      status: 'active',
+      status: "active",
       keywords: [grant.category, source.type],
       discovered_at: new Date().toISOString(),
     }));
 
     const { data, error } = await supabase
-      .from('grants')
+      .from("grants")
       .upsert(grantsToInsert, {
-        onConflict: 'source_url',
+        onConflict: "source_url",
         ignoreDuplicates: true,
       })
       .select();
@@ -145,7 +148,6 @@ async function crawlSource(source) {
 
     console.log(`   💾 Saved ${data.length} new grants to database`);
     return data;
-
   } catch (error) {
     console.error(`❌ Error crawling ${source.name}:`, error.message);
     return [];
@@ -156,12 +158,14 @@ async function crawlSource(source) {
  * Main discovery function
  */
 async function discoverGrants() {
-  console.log('\n🚀 Starting Grant Discovery Process');
-  console.log('===================================\n');
+  console.log("\n🚀 Starting Grant Discovery Process");
+  console.log("===================================\n");
 
   // Filter sources by priority
-  const highPrioritySources = sources.filter(s => s.priority === 'high');
-  console.log(`📊 Processing ${highPrioritySources.length} high-priority sources first\n`);
+  const highPrioritySources = sources.filter((s) => s.priority === "high");
+  console.log(
+    `📊 Processing ${highPrioritySources.length} high-priority sources first\n`,
+  );
 
   let totalGrantsFound = 0;
 
@@ -171,18 +175,18 @@ async function discoverGrants() {
     totalGrantsFound += grants.length;
 
     // Rate limiting - wait 2 seconds between sources
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
-  console.log('\n===================================');
+  console.log("\n===================================");
   console.log(`✅ Discovery Complete!`);
   console.log(`   Total new grants discovered: ${totalGrantsFound}`);
-  console.log('===================================\n');
+  console.log("===================================\n");
 
   // Check total grants in database
   const { count } = await supabase
-    .from('grants')
-    .select('*', { count: 'exact', head: true });
+    .from("grants")
+    .select("*", { count: "exact", head: true });
 
   console.log(`📊 Total grants in database: ${count}`);
 
@@ -190,7 +194,7 @@ async function discoverGrants() {
 }
 
 // Run discovery
-discoverGrants().catch(error => {
-  console.error('❌ Discovery failed:', error);
+discoverGrants().catch((error) => {
+  console.error("❌ Discovery failed:", error);
   process.exit(1);
 });

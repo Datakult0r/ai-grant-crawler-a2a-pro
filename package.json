@@ -10,7 +10,8 @@
     "dev:with-auto": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run auto-accept\"",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "verify": "node verify-setup.js",
-    "setup": "npm run verify && npm run install:all"
+    "setup": "npm run verify && npm run install:all",
+    "start": "cd backend && npm install && npm start"
   },
   "dependencies": {
     "puppeteer": "^22.0.0"

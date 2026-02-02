@@ -1,5 +1,5 @@
 import express from "express";
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { supabase } from "../config/database.js";
 import { env } from "../config/env.js";
 import { FirecrawlService } from "../services/firecrawl.js";
@@ -8,14 +8,16 @@ const router = express.Router();
 
 // Check if Firecrawl is available
 if (FirecrawlService.isAvailable()) {
-  console.log('✅ Firecrawl initialized for real-time grant discovery');
+  console.log("✅ Firecrawl initialized for real-time grant discovery");
 } else {
-  console.warn('⚠️  FIRECRAWL_API_KEY not found - real-time search will not work');
+  console.warn(
+    "⚠️  FIRECRAWL_API_KEY not found - real-time search will not work",
+  );
 }
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(env.geminiKey);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 /**
  * PUBLIC GRANT DATABASES TO SEARCH
@@ -23,154 +25,184 @@ const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
  */
 const GRANT_SOURCES = [
   {
-    name: 'Grants.gov (USA)',
-    searchUrl: (keyword) => `https://www.grants.gov/search-results?keywords=${encodeURIComponent(keyword)}`,
-    priority: 'high',
+    name: "Grants.gov (USA)",
+    searchUrl: (keyword) =>
+      `https://www.grants.gov/search-results?keywords=${encodeURIComponent(keyword)}`,
+    priority: "high",
   },
   {
-    name: 'NSF (USA)',
-    searchUrl: (keyword) => `https://www.nsf.gov/awardsearch/simpleSearch.jsp?queryText=${encodeURIComponent(keyword)}`,
-    priority: 'high',
+    name: "NSF (USA)",
+    searchUrl: (keyword) =>
+      `https://www.nsf.gov/awardsearch/simpleSearch.jsp?queryText=${encodeURIComponent(keyword)}`,
+    priority: "high",
   },
   {
-    name: 'Horizon Europe',
-    searchUrl: (keyword) => `https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-search;keywords=${encodeURIComponent(keyword)}`,
-    priority: 'high',
+    name: "Horizon Europe",
+    searchUrl: (keyword) =>
+      `https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-search;keywords=${encodeURIComponent(keyword)}`,
+    priority: "high",
   },
   {
-    name: 'Portugal - ANI',
-    searchUrl: (keyword) => `https://www.ani.pt/pt/apoios-e-incentivos/?search=${encodeURIComponent(keyword)}`,
-    priority: 'high',
+    name: "Portugal - ANI",
+    searchUrl: (keyword) =>
+      `https://www.ani.pt/pt/apoios-e-incentivos/?search=${encodeURIComponent(keyword)}`,
+    priority: "high",
   },
   {
-    name: 'Portugal - IAPMEI',
-    searchUrl: (keyword) => `https://www.iapmei.pt/PRODUTOS-E-SERVICOS/Incentivos-Financiamento.aspx?search=${encodeURIComponent(keyword)}`,
-    priority: 'high',
+    name: "Portugal - IAPMEI",
+    searchUrl: (keyword) =>
+      `https://www.iapmei.pt/PRODUTOS-E-SERVICOS/Incentivos-Financiamento.aspx?search=${encodeURIComponent(keyword)}`,
+    priority: "high",
   },
   {
-    name: 'Portugal - COMPETE 2030',
-    searchUrl: (keyword) => `https://www.compete2030.gov.pt/?s=${encodeURIComponent(keyword)}`,
-    priority: 'high',
+    name: "Portugal - COMPETE 2030",
+    searchUrl: (keyword) =>
+      `https://www.compete2030.gov.pt/?s=${encodeURIComponent(keyword)}`,
+    priority: "high",
   },
   {
-    name: 'EIC Accelerator',
-    searchUrl: (keyword) => `https://eic.ec.europa.eu/eic-funding-opportunities_en?search=${encodeURIComponent(keyword)}`,
-    priority: 'medium',
+    name: "EIC Accelerator",
+    searchUrl: (keyword) =>
+      `https://eic.ec.europa.eu/eic-funding-opportunities_en?search=${encodeURIComponent(keyword)}`,
+    priority: "medium",
   },
   {
-    name: 'UK Innovate',
-    searchUrl: (keyword) => `https://apply-for-innovation-funding.service.gov.uk/competition/search?searchQuery=${encodeURIComponent(keyword)}`,
-    priority: 'medium',
+    name: "UK Innovate",
+    searchUrl: (keyword) =>
+      `https://apply-for-innovation-funding.service.gov.uk/competition/search?searchQuery=${encodeURIComponent(keyword)}`,
+    priority: "medium",
   },
   {
-    name: 'European Research Council (ERC)',
-    searchUrl: (keyword) => `https://erc.europa.eu/funding/open-calls?search=${encodeURIComponent(keyword)}`,
-    priority: 'high',
+    name: "European Research Council (ERC)",
+    searchUrl: (keyword) =>
+      `https://erc.europa.eu/funding/open-calls?search=${encodeURIComponent(keyword)}`,
+    priority: "high",
   },
   {
-    name: 'NIH Grants (USA)',
-    searchUrl: (keyword) => `https://grants.nih.gov/funding/searchguide/search-guide.cfm?keyword=${encodeURIComponent(keyword)}`,
-    priority: 'medium',
+    name: "NIH Grants (USA)",
+    searchUrl: (keyword) =>
+      `https://grants.nih.gov/funding/searchguide/search-guide.cfm?keyword=${encodeURIComponent(keyword)}`,
+    priority: "medium",
   },
   {
-    name: 'DARPA Opportunities',
-    searchUrl: (keyword) => `https://www.darpa.mil/work-with-us/opportunities?search=${encodeURIComponent(keyword)}`,
-    priority: 'medium',
+    name: "DARPA Opportunities",
+    searchUrl: (keyword) =>
+      `https://www.darpa.mil/work-with-us/opportunities?search=${encodeURIComponent(keyword)}`,
+    priority: "medium",
   },
   {
-    name: 'Canada - NSERC',
-    searchUrl: (keyword) => `https://www.nserc-crsng.gc.ca/Professors-Professeurs/Grants-Subs/index_eng.asp?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Canada - NSERC",
+    searchUrl: (keyword) =>
+      `https://www.nserc-crsng.gc.ca/Professors-Professeurs/Grants-Subs/index_eng.asp?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Australia - ARC Grants',
-    searchUrl: (keyword) => `https://www.arc.gov.au/grants-funding?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Australia - ARC Grants",
+    searchUrl: (keyword) =>
+      `https://www.arc.gov.au/grants-funding?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Germany - DFG',
-    searchUrl: (keyword) => `https://www.dfg.de/en/research_funding/programmes/index.jsp?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Germany - DFG",
+    searchUrl: (keyword) =>
+      `https://www.dfg.de/en/research_funding/programmes/index.jsp?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'France - ANR',
-    searchUrl: (keyword) => `https://anr.fr/en/call-for-proposals-all-types/?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "France - ANR",
+    searchUrl: (keyword) =>
+      `https://anr.fr/en/call-for-proposals-all-types/?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Netherlands - NWO',
-    searchUrl: (keyword) => `https://www.nwo.nl/en/calls?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Netherlands - NWO",
+    searchUrl: (keyword) =>
+      `https://www.nwo.nl/en/calls?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Switzerland - SNF',
-    searchUrl: (keyword) => `https://www.snf.ch/en/funding?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Switzerland - SNF",
+    searchUrl: (keyword) =>
+      `https://www.snf.ch/en/funding?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Bill & Melinda Gates Foundation',
-    searchUrl: (keyword) => `https://www.gatesfoundation.org/about/how-we-work/general-information/grant-opportunities?search=${encodeURIComponent(keyword)}`,
-    priority: 'medium',
+    name: "Bill & Melinda Gates Foundation",
+    searchUrl: (keyword) =>
+      `https://www.gatesfoundation.org/about/how-we-work/general-information/grant-opportunities?search=${encodeURIComponent(keyword)}`,
+    priority: "medium",
   },
   {
-    name: 'Wellcome Trust',
-    searchUrl: (keyword) => `https://wellcome.org/grant-funding/schemes?search=${encodeURIComponent(keyword)}`,
-    priority: 'medium',
+    name: "Wellcome Trust",
+    searchUrl: (keyword) =>
+      `https://wellcome.org/grant-funding/schemes?search=${encodeURIComponent(keyword)}`,
+    priority: "medium",
   },
   {
-    name: 'Chan Zuckerberg Initiative',
-    searchUrl: (keyword) => `https://chanzuckerberg.com/grants-ventures/grants/?search=${encodeURIComponent(keyword)}`,
-    priority: 'medium',
+    name: "Chan Zuckerberg Initiative",
+    searchUrl: (keyword) =>
+      `https://chanzuckerberg.com/grants-ventures/grants/?search=${encodeURIComponent(keyword)}`,
+    priority: "medium",
   },
   {
-    name: 'Ford Foundation',
-    searchUrl: (keyword) => `https://www.fordfoundation.org/work/challenging-inequality/grants/?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Ford Foundation",
+    searchUrl: (keyword) =>
+      `https://www.fordfoundation.org/work/challenging-inequality/grants/?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Robert Wood Johnson Foundation',
-    searchUrl: (keyword) => `https://www.rwjf.org/en/how-we-work/grants-and-grant-programs.html?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Robert Wood Johnson Foundation",
+    searchUrl: (keyword) =>
+      `https://www.rwjf.org/en/how-we-work/grants-and-grant-programs.html?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'UK Research and Innovation (UKRI)',
-    searchUrl: (keyword) => `https://www.ukri.org/opportunity/?search=${encodeURIComponent(keyword)}`,
-    priority: 'medium',
+    name: "UK Research and Innovation (UKRI)",
+    searchUrl: (keyword) =>
+      `https://www.ukri.org/opportunity/?search=${encodeURIComponent(keyword)}`,
+    priority: "medium",
   },
   {
-    name: 'European Innovation Council',
-    searchUrl: (keyword) => `https://eic.ec.europa.eu/eic-funding-opportunities_en?search=${encodeURIComponent(keyword)}`,
-    priority: 'high',
+    name: "European Innovation Council",
+    searchUrl: (keyword) =>
+      `https://eic.ec.europa.eu/eic-funding-opportunities_en?search=${encodeURIComponent(keyword)}`,
+    priority: "high",
   },
   {
-    name: 'Spain - CDTI',
-    searchUrl: (keyword) => `https://www.cdti.es/en/funding-opportunities?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Spain - CDTI",
+    searchUrl: (keyword) =>
+      `https://www.cdti.es/en/funding-opportunities?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Italy - MIUR',
-    searchUrl: (keyword) => `https://www.mur.gov.it/en/research-and-innovation/funding?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Italy - MIUR",
+    searchUrl: (keyword) =>
+      `https://www.mur.gov.it/en/research-and-innovation/funding?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Nordic Innovation',
-    searchUrl: (keyword) => `https://www.nordicinnovation.org/funding?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Nordic Innovation",
+    searchUrl: (keyword) =>
+      `https://www.nordicinnovation.org/funding?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Japan - JST',
-    searchUrl: (keyword) => `https://www.jst.go.jp/EN/funding/?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Japan - JST",
+    searchUrl: (keyword) =>
+      `https://www.jst.go.jp/EN/funding/?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Singapore - NRF',
-    searchUrl: (keyword) => `https://www.nrf.gov.sg/programmes?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Singapore - NRF",
+    searchUrl: (keyword) =>
+      `https://www.nrf.gov.sg/programmes?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
   {
-    name: 'Israel Innovation Authority',
-    searchUrl: (keyword) => `https://innovationisrael.org.il/en/program?search=${encodeURIComponent(keyword)}`,
-    priority: 'low',
+    name: "Israel Innovation Authority",
+    searchUrl: (keyword) =>
+      `https://innovationisrael.org.il/en/program?search=${encodeURIComponent(keyword)}`,
+    priority: "low",
   },
 ];
 
@@ -226,12 +258,11 @@ If NO grants found, return: []`;
     console.log(`✅ ${source.name}: Found ${grants.length} grants`);
 
     // Add source metadata
-    return grants.map(grant => ({
+    return grants.map((grant) => ({
       ...grant,
       source: source.name,
       discovered_at: new Date().toISOString(),
     }));
-
   } catch (error) {
     console.error(`❌ Error crawling ${source.name}:`, error.message);
     return [];
@@ -253,24 +284,30 @@ router.post("/", async (req, res) => {
     console.log(`\n🚀 Starting real-time search for: "${keyword}"\n`);
 
     // Crawl all high-priority sources in parallel
-    const highPrioritySources = GRANT_SOURCES.filter(s => s.priority === 'high');
+    const highPrioritySources = GRANT_SOURCES.filter(
+      (s) => s.priority === "high",
+    );
 
-    const crawlPromises = highPrioritySources.map(source =>
-      crawlSource(source, keyword.trim())
+    const crawlPromises = highPrioritySources.map((source) =>
+      crawlSource(source, keyword.trim()),
     );
 
     // Wait for all crawls with 30s timeout
     const results = await Promise.race([
       Promise.all(crawlPromises),
-      new Promise(resolve => setTimeout(() => {
-        console.log('⏱️  Search timeout reached');
-        resolve([]);
-      }, 30000)),
+      new Promise((resolve) =>
+        setTimeout(() => {
+          console.log("⏱️  Search timeout reached");
+          resolve([]);
+        }, 30000),
+      ),
     ]);
 
     const allGrants = results.flat();
 
-    console.log(`\n✅ Search complete: ${allGrants.length} total grants found\n`);
+    console.log(
+      `\n✅ Search complete: ${allGrants.length} total grants found\n`,
+    );
 
     res.json({
       results: allGrants,
@@ -279,7 +316,6 @@ router.post("/", async (req, res) => {
       sources_searched: highPrioritySources.length,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error("Real-time search error:", error);
     res.status(500).json({ error: "Search failed" });
@@ -296,7 +332,7 @@ router.post("/save", async (req, res) => {
 
     // Save to user's saved grants
     const { data, error } = await supabase
-      .from('saved_grants')
+      .from("saved_grants")
       .insert({
         name: grant.name,
         description: grant.description,
@@ -307,7 +343,7 @@ router.post("/save", async (req, res) => {
         eligibility: grant.eligibility,
         category: grant.category,
         saved_at: new Date().toISOString(),
-        status: 'interested',
+        status: "interested",
       })
       .select()
       .single();
@@ -317,9 +353,8 @@ router.post("/save", async (req, res) => {
     res.json({
       success: true,
       grant: data,
-      message: 'Grant saved to your list',
+      message: "Grant saved to your list",
     });
-
   } catch (error) {
     console.error("Save grant error:", error);
     res.status(500).json({ error: "Failed to save grant" });
@@ -333,9 +368,9 @@ router.post("/save", async (req, res) => {
 router.get("/saved", async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('saved_grants')
-      .select('*')
-      .order('saved_at', { ascending: false });
+      .from("saved_grants")
+      .select("*")
+      .order("saved_at", { ascending: false });
 
     if (error) throw error;
 
@@ -343,7 +378,6 @@ router.get("/saved", async (req, res) => {
       results: data || [],
       count: data?.length || 0,
     });
-
   } catch (error) {
     console.error("Get saved grants error:", error);
     res.status(500).json({ error: "Failed to fetch saved grants" });
