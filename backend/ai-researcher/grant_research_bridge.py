@@ -251,6 +251,25 @@ def run_agent_laboratory(grant_data):
             stream_stage_completed(final_stage["name"], final_stage["index"], 
                                  elapsed, "Research workflow completed")
             
+            # === PHASE 4: Self-Correction & Reflection ===
+            stream_phase_update("Self-Correction & Reflection", "Evaluating research quality", 7)
+            stream_agent_active("ReflectionAgent", "Critique", "Analyzing output against requirements", 0)
+            
+            from reflection_agent import ReflectionAgent
+            reflector = ReflectionAgent(api_key=api_key)
+            critique = reflector.reflect(lab_dir, grant_data)
+            
+            stream_log(f"Reflection Score: {critique.get('score', 0)}/100")
+            
+            reflection_event = {
+                "type": "reflection",
+                "score": critique.get("score", 0),
+                "critique": critique,
+                "message": "Self-correction analysis complete"
+            }
+            print(json.dumps(reflection_event), flush=True)
+            # ============================================
+
         except Exception as research_error:
             stream_error(f"Research workflow error: {str(research_error)}")
             raise
