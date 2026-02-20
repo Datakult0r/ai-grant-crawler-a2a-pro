@@ -1,0 +1,42 @@
+# Agent Laboratory Real-Time Visualization
+
+## Vision
+Low-fidelity pixel-art game view that shows the multi-agent research team working in real-time, with a breadcrumb trail demonstrating progress through the 7 research stages.
+
+(example of the breadcrumb also included in the folder)
+
+## Technical Stack
+- Engine LiteCanvas (~4KB) - zero game-dev complexity
+- Alternative Plain Canvas loop (100 lines of code)
+- Data Source SSE stream from `apiresearchidstream`
+
+## Visual Elements
+1. Horizontal breadcrumb timeline (7 stages across top)
+2. Agent sprites below timeline (4-5 researcher icons)
+3. Real-time state updates via SSE
+4. Interactive click stage → view logsartifacts
+
+## SSE Event Schema
+{
+type stage_started  agent_active  agent_idle  stage_completed,
+stage Literature Review  Planning  ...,
+agent lit_reviewer  planner  ...,
+message Found 12 relevant papers...
+}
+
+text
+
+## Implementation Priority
+- Phase 3 (stretch goal)
+- Non-blocking to core Phase 1 (Discovery) + Phase 2 (Research) work
+- Adds 5× debugging speed and user engagement
+Why This Approach Works
+Plug-and-play litecanvas is a drop-in library - Antigravity doesn't need to build a game engine​
+
+Lightweight 4KB won't bloat your system​
+
+Real-time Consumes SSE events naturally, no polling needed
+
+Debuggable Agent visualization tools like AgentPrism show 80% reduction in debugging time with similar approaches​
+
+Reusable Other Agent Lab projects can use the same viewer component
